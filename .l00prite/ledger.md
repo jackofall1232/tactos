@@ -66,3 +66,23 @@ Append one entry per agent run. Do not overwrite prior runs.
 - **Next action:** `core/design` theme + `app/` shell with ModuleRegistry (todos), or the on-device accessibility spike when an emulator is available.
 - **Do-not-retry notes:** none new.
 - **Lock:** `lock-20260710T223308Z-claude-unit4-memory` acquired and released for this memory write.
+
+### Run 2026-07-10T22:51:23Z — claude (supervised build loop, unit 5)
+- **Goal:** `core/design` theme + `app/` shell per `todos.md` (owner said "Continue").
+- **Triggering event:** none.
+- **Reviewer/comment reference:** CI run #6 (head 45268d3, conclusion success) — https://github.com/jackofall1232/tactos/actions.
+- **Decision:** Normal work; scoped to avoid every review gate (no new dependencies, no manifest changes, navigation via plain Compose state instead of navigation-compose).
+- **Completed work:** `core/design`: TactosTheme (dynamic color API 31+, static teal/amber palette below, light+dark), shared ToolboxCard. `app/`: ModuleRegistry-driven home grid (clipboard placeholder, stable id "clipboard"), state-based navigation (Home/Settings/Disclosure/Module), settings skeleton with disabled coming-soon rows (nothing fakes persistence), DRAFT capture-disclosure screen (marked as draft in-app; final wording = human review gate). ToolboxModule contract gained `emoji: String` (defaulted; contract not yet consumed by feature modules) + test.
+- **Fix implemented:** none needed — CI green on first attempt.
+- **Changed files:** settings.gradle.kts, core/design/** (build file, Theme.kt, components/ToolboxCard.kt), app/** (build file, MainActivity, TactosApp, Modules, screens/{Home,Settings,Disclosure,ModulePlaceholder}Screen.kt), core/model ToolboxModule.kt + ModuleRegistryTest.kt.
+- **Tests run / Verification:**
+  - command: `gradle :core:model:test :core:detect:test --configure-on-demand` · exit_code: 0 · summary: 37 test methods incl. new emoji contract test, 0 failures · timestamp: 2026-07-10T22:45Z
+  - command: CI run #6 on 45268d3 (`./gradlew assembleDebug`, `test`, `:app:lintDebug`) · exit_code: 0 (conclusion: success) · summary: Compose theme + shell compile, lint clean, APK artifact uploaded · timestamp: 2026-07-10T22:50Z
+- **Response drafted/sent:** Session summary to owner in-chat.
+- **Event status:** Not applicable.
+- **Failures:** none.
+- **Decisions:** Emoji glyphs (strings) as module icons keep the plugin contract UI-toolkit-neutral and echo the product pitch. navigation-compose and DataStore both deferred as explicit dependency gates. Disclosure text ships marked DRAFT until maintainer review.
+- **Confidence:** High — CI-green; UI exercised only by compile/lint (no UI test harness yet — queued gate item).
+- **Next action:** `feature/clipboard` timeline UI consuming ClipRepository + contracts (note: first consumer of ToolboxModule/ClipAction — gate #4 activates for contract changes after this), or the on-device capture spike.
+- **Do-not-retry notes:** none new.
+- **Lock:** `lock-20260710T224206Z-claude-unit5` acquired 22:42Z, released at session end.

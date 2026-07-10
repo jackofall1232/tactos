@@ -4,11 +4,11 @@
 - [ ] Spike: verify AccessibilityService clipboard capture on an emulator (API 29+ and
       34+), record the working mechanism and its limits in `.l00prite/memory.md` before
       building the full capture feature.
-- [ ] `core/design` theme (dynamic color + static fallback, light/dark) and `app/` shell:
-      navigation, `ModuleRegistry` home grid, settings, onboarding with capture
-      disclosure.
 - [ ] `feature/clipboard`: timeline UI — list, search, pin, favorite, delete, category
-      filters, item detail with type chips.
+      filters, item detail with type chips (consumes ClipRepository + the contracts —
+      first consumer, so the contract review gate activates after this unit).
+- [ ] Onboarding first-run gating + real settings persistence — needs DataStore
+      (dependency review gate); the disclosure screen content already exists in-app.
 - [ ] Capture ladder integration: share-to-tactos target, manual add, foreground refresh,
       accessibility toggle wired to the spiked mechanism.
 - [ ] v1 contextual actions: URL open/share/QR (zxing offline); color preview +
@@ -56,6 +56,11 @@ Phase order for the full vision (one toolbox phase at a time; each is its own
       service, listing assets, release signing, data-safety form.
 
 ## Done
+- 2026-07-10 — Unit 5: `core/design` TactosTheme (dynamic + static palettes, light/dark)
+  + ToolboxCard; app shell with ModuleRegistry-driven home grid, settings skeleton,
+  DRAFT capture-disclosure screen; ToolboxModule.emoji contract addition. CI run #6
+  green (45268d3). Deferred gates recorded: navigation-compose, DataStore, UI test
+  harness, disclosure final wording.
 - 2026-07-10 — Unit 4: `core/database` Room timeline (entity/DAO/repository, consecutive
   dedup, Unicode search, retention sparing pinned/favorite), 13 Robolectric tests,
   CI-green (run 29127626654). Cleanup *scheduling* (WorkManager) still pending — new

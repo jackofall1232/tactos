@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "lock_id": "lock-20260710T211500Z-claude-supervised-build",
+  "lock_id": "lock-20260710T224206Z-claude-unit5",
   "owner_agent": null,
   "owner_session": null,
-  "acquired_at": "2026-07-10T21:15:00Z",
-  "expires_at": "2026-07-10T22:15:00Z",
+  "acquired_at": "2026-07-10T22:42:06Z",
+  "expires_at": "2026-07-10T23:42:06Z",
   "ttl_seconds": 3600,
   "purpose": null,
   "protected_paths": [
