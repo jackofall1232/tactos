@@ -31,3 +31,4 @@ rootProject.name = "tactos"
 include(":app")
 include(":core:model")
 include(":core:detect")
+include(":core:database")
