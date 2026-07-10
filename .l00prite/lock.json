@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "lock_id": "lock-20260710T224206Z-claude-unit5",
-  "owner_agent": null,
-  "owner_session": null,
-  "acquired_at": "2026-07-10T22:42:06Z",
-  "expires_at": "2026-07-10T23:42:06Z",
-  "ttl_seconds": 3600,
-  "purpose": null,
+  "lock_id": "lock-20260710T225925Z-claude-unit6",
+  "owner_agent": "claude",
+  "owner_session": "session_01UeB6KJmStu36oYqkGKcp5w",
+  "acquired_at": "2026-07-10T22:59:25Z",
+  "expires_at": "2026-07-11T00:59:25Z",
+  "ttl_seconds": 7200,
+  "purpose": "supervised build loop: record V2 vision in todos, then unit 6 (feature/clipboard timeline UI)",
   "protected_paths": [
     "ledger.md",
     "memory.md",
@@ -18,5 +18,5 @@
     "reviews/",
     "sessions/"
   ],
-  "status": "released"
+  "status": "active"
 }

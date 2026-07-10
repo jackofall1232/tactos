@@ -55,6 +55,45 @@ Phase order for the full vision (one toolbox phase at a time; each is its own
 - [ ] Phase 10 — Play Store preparation: prominent-disclosure flow for the accessibility
       service, listing assets, release signing, data-safety form.
 
+## V2 — AI workflow engine ("the foreman") 🧰🎙️🤖
+Owner's vision (recorded 2026-07-10): not a toolbox with 80 drawers — a toolbox with a
+foreman. A universal command bar (tap mic → speak → review plan → run) that turns natural
+language ("resize these five images to 1080 wide, convert to WebP, strip metadata, save to
+a new folder") into a safe, visible, locally-executed workflow. The product becomes *a
+private, AI-controlled utility layer for Android*.
+
+Architecture principles (binding on v1 design so V2 stays reachable — see `memory.md`):
+- [ ] The model NEVER acts on the device directly. It emits structured intents (e.g.
+      `{"intent":"batch_convert_images","inputs":{...},"requires_confirmation":true}`)
+      against a fixed registry of app-exposed tools — a model cannot invent capabilities;
+      it can only call the tools the app exposes. The `ToolboxModule`/`ClipAction`
+      descriptor seam is the substrate: every toolbox capability doubles as a declarative,
+      model-invocable action.
+- [ ] Pipeline: model interprets → app maps to approved internal actions → user sees
+      exactly what will happen → app executes locally → result shown, with undo where
+      possible.
+- [ ] Three control modes: **Ask** (explain only, change nothing), **Assist** (build the
+      workflow, require approval), **Hands-free** (auto-run low-risk actions only:
+      formatting, QR, resize-selected). Destructive/privacy-sensitive actions ALWAYS
+      pause for confirmation: deleting files, overwriting originals, scanning whole
+      folders, decrypting protected content, sending/uploading anything, touching
+      passwords or secure notes.
+- [ ] Voice ≠ cloud: transcription via Android speech recognition, on-device models, or
+      Whisper-compatible local models; command model via Claude/ChatGPT/Gemini/OpenRouter
+      /Ollama or a local endpoint. User-configurable policy, e.g. transcription on-device,
+      command model Claude, private operations local-model-only, cloud uploads never.
+- [ ] Tool chaining: multi-step natural commands ("crop square, resize 1200×1200, convert
+      to JPEG, write the clipboard caption to a text file beside it") compose the same
+      structured actions into workflows.
+- [ ] Same command surface from every entry point: voice, typed prompts, widgets, share
+      sheet, quick settings tile, notification actions, Tasker/automation intents, and a
+      future accessibility overlay — one intent schema underneath.
+- [ ] Example commands to acceptance-test against: batch PNG→WebP a folder; compress an
+      image under 500 KB "without making it look terrible"; extract just the tracking
+      number from the clipboard; merge screenshots into one PDF; summarize the last ten
+      clips; OCR a receipt into a note; strip metadata from selected photos; format JSON
+      and explain what's wrong; QR from the clipboard URL.
+
 ## Done
 - 2026-07-10 — Unit 5: `core/design` TactosTheme (dynamic + static palettes, light/dark)
   + ToolboxCard; app shell with ModuleRegistry-driven home grid, settings skeleton,

@@ -134,7 +134,11 @@ toolbox, utilities, privacy toolbox, image toolbox, AI toolbox (BYO keys:
 Anthropic/OpenAI/Gemini/xAI-Grok/Ollama/OpenRouter), PDF toolbox, network toolbox, device
 toolbox, on-device OCR, timeline enhancements (image clips, code-snippet detection,
 clipboard OCR), plugin SDK extraction, Play Store preparation (including the accessibility
-prominent-disclosure review path).
+prominent-disclosure review path). **V2 vision** (full spec in `todos.md`): an AI workflow
+engine — a universal voice/typed command bar that converts natural language into
+structured intents over the app's declared tools (Ask / Assist / Hands-free modes,
+destructive actions always confirmed, on-device or BYO-key models) — which is why every
+toolbox capability is modeled as a declarative `ClipAction`-style descriptor from day one.
 
 ## 4. Definition of Done
 

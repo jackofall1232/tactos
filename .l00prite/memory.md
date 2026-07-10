@@ -15,6 +15,13 @@ Durable project facts and decisions that future agents should preserve.
 - Version catalog pins are conservative known-stable versions (AGP 8.11.1, Kotlin 2.4.0,
   Compose BOM 2024.12.01); bumps go through CI verification, never blind.
 - The `:app` manifest ships with zero permissions in v1; `android:allowBackup="false"`.
+- **Actions stay declarative (V2 groundwork).** The owner's V2 vision is an AI workflow
+  engine that turns natural language into structured intents executed against
+  app-exposed tools (see the V2 section in `todos.md`). Therefore every toolbox
+  capability must be modeled as data (`ClipAction`-style descriptors + an app-side
+  executor registry keyed by action id), never as ad-hoc UI callbacks — the same
+  descriptors later become the model-invocable tool registry, with per-action
+  risk levels (low-risk auto-runnable vs. always-confirm destructive/privacy-sensitive).
 
 ## Facts
 - The Claude remote sandbox used for this repo cannot reach dl.google.com /
