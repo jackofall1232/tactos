@@ -46,3 +46,23 @@ Append one entry per agent run. Do not overwrite prior runs.
 - **Next action:** The accessibility-capture spike needs a real device/emulator — not possible in this sandbox; either run it via Android Studio or let the next session start core/database (note: Room tests need Robolectric or instrumentation — a new dependency, which is a human review gate).
 - **Do-not-retry notes:** Do not attempt SDK install or Google Maven fetches from this remote sandbox (policy-blocked, including Aliyun/Tencent/Huawei mirrors and gradle-distributions on GitHub); use CI for Android verification.
 - **Lock:** `lock-20260710T211500Z-claude-supervised-build` acquired 21:15Z, refreshed 22:12Z, released at session end.
+
+### Run 2026-07-10T22:33:08Z — claude (supervised build loop, unit 4)
+- **Goal:** `core/database` Room timeline per `todos.md`, with the owner's in-session approval of the Robolectric test-stack dependency (review gate).
+- **Triggering event:** none (owner chose "Approve Robolectric, continue").
+- **Reviewer/comment reference:** CI run 29127626654 (success) — https://github.com/jackofall1232/tactos/actions/runs/29127626654.
+- **Decision:** Normal work; new-dependency review gate satisfied by explicit in-session owner approval.
+- **Completed work:** `:core:database` Android library: ClipItemEntity (enum-name type column, Kotlin-lowercased `text_lc` for Unicode-correct case-insensitive search), ClipDao (Flow timeline pinned-first, escaped LIKE search, @Transaction consecutive-dedup upsert, pin/favorite/category, age+count retention sparing pinned/favorite), TactosDatabase v1 (exportSchema), ClipRepository (mapping, LIKE escaping, blank-query guard). 13 Robolectric tests.
+- **Fix implemented:** none needed — CI green on first attempt.
+- **Changed files:** settings.gradle.kts, gradle/libs.versions.toml (room/ksp/robolectric/coroutines-test/androidx-test-core), core/database/** (build file, 4 sources, 1 test file).
+- **Tests run / Verification:**
+  - command: `gradle :core:model:test :core:detect:test --configure-on-demand` · exit_code: 0 · summary: regression check after catalog edits · timestamp: 2026-07-10T22:22Z
+  - command: CI run 29127626654 (`./gradlew assembleDebug`, `test`, `:app:lintDebug`) · exit_code: 0 (conclusion: success) · summary: Room/KSP resolved, 13 Robolectric tests + all prior suites green, APK artifact uploaded · evidence_path: https://github.com/jackofall1232/tactos/actions/runs/29127626654 · timestamp: 2026-07-10T22:28:40Z
+- **Response drafted/sent:** Session summary to owner in-chat.
+- **Event status:** Not applicable.
+- **Failures:** none.
+- **Decisions:** Retention *policy* lives in DAO/repository; *scheduling* (WorkManager) deliberately deferred — adding WorkManager is a future review gate. Room schema JSON should be committed once the first migration matters (schemas/ dir configured via KSP arg).
+- **Confidence:** High — CI-green including the new Robolectric suite.
+- **Next action:** `core/design` theme + `app/` shell with ModuleRegistry (todos), or the on-device accessibility spike when an emulator is available.
+- **Do-not-retry notes:** none new.
+- **Lock:** `lock-20260710T223308Z-claude-unit4-memory` acquired and released for this memory write.

@@ -4,8 +4,6 @@
 - [ ] Spike: verify AccessibilityService clipboard capture on an emulator (API 29+ and
       34+), record the working mechanism and its limits in `.l00prite/memory.md` before
       building the full capture feature.
-- [ ] `core/database`: Room timeline entity/DAOs, content-hash dedup, retention +
-      auto-cleanup worker (pinned/favorite exempt).
 - [ ] `core/design` theme (dynamic color + static fallback, light/dark) and `app/` shell:
       navigation, `ModuleRegistry` home grid, settings, onboarding with capture
       disclosure.
@@ -58,6 +56,10 @@ Phase order for the full vision (one toolbox phase at a time; each is its own
       service, listing assets, release signing, data-safety form.
 
 ## Done
+- 2026-07-10 — Unit 4: `core/database` Room timeline (entity/DAO/repository, consecutive
+  dedup, Unicode search, retention sparing pinned/favorite), 13 Robolectric tests,
+  CI-green (run 29127626654). Cleanup *scheduling* (WorkManager) still pending — new
+  dependency ⇒ review gate; wire it with the app-integration unit.
 - 2026-07-10 — Unit 3: `core/detect` — six detectors + ContentDetector priority chain,
   ~415 blind adversarial test assertions (local suite green; see ledger).
 - 2026-07-10 — Unit 2: `core/model` contracts (ClipType, ClipItem + contentHashOf,
