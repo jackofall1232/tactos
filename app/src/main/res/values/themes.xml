@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold-start window theme only; Compose (TactosTheme) owns everything after
+     first frame. values-night/ provides the dark variant so a dark-mode device
+     never flashes a white startup window (PR #1 review). -->
+<resources>
+    <style name="Theme.Tactos" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
