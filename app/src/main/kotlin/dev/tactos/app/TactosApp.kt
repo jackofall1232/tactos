@@ -17,10 +17,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import dev.tactos.app.screens.DisclosureScreen
 import dev.tactos.app.screens.HomeScreen
 import dev.tactos.app.screens.ModulePlaceholderScreen
 import dev.tactos.app.screens.SettingsScreen
+import dev.tactos.core.database.ClipRepository
+import dev.tactos.core.database.TactosDb
+import dev.tactos.feature.clipboard.ClipboardScreen
+import dev.tactos.feature.clipboard.ClipboardToolbox
 
 /**
  * In-app destinations. Navigation is deliberately plain Compose state for
@@ -39,6 +44,8 @@ sealed interface Screen {
 fun TactosApp() {
     val registry = remember { appModuleRegistry() }
     var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+    val appContext = LocalContext.current.applicationContext
+    val clipRepository = remember { ClipRepository(TactosDb.get(appContext).clipDao()) }
 
     Scaffold(
         topBar = {
@@ -86,10 +93,16 @@ fun TactosApp() {
                 modifier = contentModifier,
             )
             Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
-            is Screen.Module -> ModulePlaceholderScreen(
-                module = registry.byId(s.moduleId),
-                modifier = contentModifier,
-            )
+            is Screen.Module -> when (s.moduleId) {
+                ClipboardToolbox.id -> ClipboardScreen(
+                    repository = clipRepository,
+                    modifier = contentModifier,
+                )
+                else -> ModulePlaceholderScreen(
+                    module = registry.byId(s.moduleId),
+                    modifier = contentModifier,
+                )
+            }
         }
     }
 }

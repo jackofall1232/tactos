@@ -1,29 +1,15 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "dev.tactos.app"
+    namespace = "dev.tactos.feature.clipboard"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "dev.tactos.app"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-dev"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
     }
 
     compileOptions {
@@ -44,13 +30,14 @@ kotlin {
 
 dependencies {
     implementation(project(":core:model"))
-    implementation(project(":core:detect"))
-    implementation(project(":core:design"))
     implementation(project(":core:database"))
-    implementation(project(":feature:clipboard"))
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity.compose)
+    implementation(project(":core:design"))
+    implementation(project(":core:detect"))
+    implementation(libs.kotlinx.coroutines.core)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlin.test)
 }
