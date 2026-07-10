@@ -45,6 +45,7 @@ kotlin {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:detect"))
+    implementation(project(":core:design"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.compose.bom))

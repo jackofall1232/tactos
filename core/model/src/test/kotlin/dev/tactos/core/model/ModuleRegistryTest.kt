@@ -67,6 +67,18 @@ class ModuleRegistryTest {
     }
 
     @Test
+    fun `emoji defaults and can be overridden`() {
+        assertEquals(ToolboxModule.DEFAULT_EMOJI, FakeModule("plain").emoji)
+        val custom = object : ToolboxModule {
+            override val id = "custom"
+            override val title = "Custom"
+            override val description = "d"
+            override val emoji = "📋"
+        }
+        assertEquals("📋", custom.emoji)
+    }
+
+    @Test
     fun `empty registry yields no modules and no actions`() {
         val registry = ModuleRegistry(emptyList())
         assertEquals(emptyList(), registry.modules)

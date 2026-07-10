@@ -19,6 +19,13 @@ interface ToolboxModule {
     /** One-line description shown on the home grid. */
     val description: String
 
+    /**
+     * Emoji glyph for the home grid tile. A string (not a drawable) keeps the
+     * contract UI-toolkit-neutral for future plugins.
+     */
+    val emoji: String
+        get() = DEFAULT_EMOJI
+
     /** Sort weight on the home grid; lower comes first, ties break by [id]. */
     val order: Int
         get() = DEFAULT_ORDER
@@ -28,5 +35,6 @@ interface ToolboxModule {
 
     companion object {
         const val DEFAULT_ORDER: Int = 100
+        const val DEFAULT_EMOJI: String = "🧰"
     }
 }
