@@ -22,7 +22,6 @@ import dev.tactos.app.screens.DisclosureScreen
 import dev.tactos.app.screens.HomeScreen
 import dev.tactos.app.screens.ModulePlaceholderScreen
 import dev.tactos.app.screens.SettingsScreen
-import dev.tactos.core.database.ClipRepository
 import dev.tactos.core.database.TactosDb
 import dev.tactos.feature.clipboard.ClipboardScreen
 import dev.tactos.feature.clipboard.ClipboardToolbox
@@ -45,7 +44,7 @@ fun TactosApp() {
     val registry = remember { appModuleRegistry() }
     var screen by remember { mutableStateOf<Screen>(Screen.Home) }
     val appContext = LocalContext.current.applicationContext
-    val clipRepository = remember { ClipRepository(TactosDb.get(appContext).clipDao()) }
+    val clipRepository = remember { TactosDb.repository(appContext) }
 
     Scaffold(
         topBar = {
