@@ -86,3 +86,24 @@ Append one entry per agent run. Do not overwrite prior runs.
 - **Next action:** `feature/clipboard` timeline UI consuming ClipRepository + contracts (note: first consumer of ToolboxModule/ClipAction — gate #4 activates for contract changes after this), or the on-device capture spike.
 - **Do-not-retry notes:** none new.
 - **Lock:** `lock-20260710T224206Z-claude-unit5` acquired 22:42Z, released at session end.
+
+### Run 2026-07-10T23:17:27Z — claude (supervised build loop, V2 recording + unit 6)
+- **Goal:** Record the owner's V2 "AI workflow engine" vision in durable memory, then build `feature/clipboard` timeline UI (owner said "Continue").
+- **Triggering event:** Owner message adding the V2 voice/AI-workflow-engine vision.
+- **Reviewer/comment reference:** CI runs #9 (failure) and #10 (success, head 6eebf86) — https://github.com/jackofall1232/tactos/actions.
+- **Decision:** Normal work. V2 recorded as todos + binding design constraint (actions stay declarative descriptors so they double as the future model-invocable tool registry).
+- **Completed work:** V2 section in `todos.md` (structured-intents-only model access, Ask/Assist/Hands-free modes, always-confirm destructive list, on-device/BYO-key voice+model matrix, tool chaining, multi-entry-point intent schema); `memory.md` design constraint; CLAUDE.md later-phases pointer. Unit 6: `feature/clipboard` module — ClipboardToolbox (first contract consumer; gate #4 now active; stable action ids clipboard.copy/share/pin declared), timeline screen (DB-backed search re-run on mutation, type + category filter chips, pinned-first list, favorite toggle, empty states), manual-add dialog through ContentDetector, detail sheet (selectable text, timestamps/source, category editor, copy/share/pin/favorite/delete), per-type emoji/label presentation, TactosDb.repository() seam; app routes the clipboard tile to the real screen. 7 JVM tests (filter logic + presentation totality).
+- **Fix implemented:** CI #9 compile failure — app touched TactosDatabase whose RoomDatabase supertype isn't on the app classpath (Room is implementation-scoped in core/database, deliberately). Fixed by encapsulation: TactosDb.get() made internal, app consumes TactosDb.repository(context) (6eebf86).
+- **Changed files:** .l00prite/todos.md, .l00prite/memory.md, CLAUDE.md (V2); settings.gradle.kts, gradle/libs.versions.toml (explicit kotlinx-coroutines-core — already transitive, no new external dep), core/database/DatabaseProvider.kt, feature/clipboard/** (build file, 5 sources, 1 test file), app/ (build file, Modules.kt, TactosApp.kt; ClipboardToolboxPlaceholder removed).
+- **Tests run / Verification:**
+  - command: `gradle :core:model:test :core:detect:test --configure-on-demand` · exit_code: 0 · summary: JVM regression after catalog/module changes · timestamp: 2026-07-10T23:02Z
+  - command: CI run #9 on 4deb691 · exit_code: 1 (conclusion: failure) · summary: :app:compileDebugKotlin — RoomDatabase supertype inaccessible from app · timestamp: 2026-07-10T23:08Z
+  - command: CI run #10 on 6eebf86 (`./gradlew assembleDebug`, `test`, `:app:lintDebug`) · exit_code: 0 (conclusion: success) · summary: full pipeline green incl. 7 new feature tests; APK artifact uploaded · timestamp: 2026-07-10T23:15Z
+- **Response drafted/sent:** Session summary to owner in-chat.
+- **Event status:** Completed (V2 vision recorded).
+- **Failures:** CI #9 as above (fixed same iteration).
+- **Decisions:** Room stays an implementation detail of core/database (repository factory is the only cross-module seam). ToolboxModule/ClipAction contract review gate is ACTIVE from this unit on. Universal clipboard action ids are stable API from now: clipboard.copy, clipboard.share, clipboard.pin.
+- **Confidence:** High — CI-green; interactive behavior still needs a human on a device (queued for DoD).
+- **Next action:** Capture ladder unit (share-to-tactos + foreground refresh + accessibility toggle — manifest changes there are review-gated and the a11y mechanism still needs its on-device spike) or v1 contextual actions (URL QR needs the zxing-core dependency — review gate).
+- **Do-not-retry notes:** none new.
+- **Lock:** `lock-20260710T225925Z-claude-unit6` acquired 22:59Z, released at session end.

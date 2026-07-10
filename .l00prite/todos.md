@@ -4,9 +4,6 @@
 - [ ] Spike: verify AccessibilityService clipboard capture on an emulator (API 29+ and
       34+), record the working mechanism and its limits in `.l00prite/memory.md` before
       building the full capture feature.
-- [ ] `feature/clipboard`: timeline UI — list, search, pin, favorite, delete, category
-      filters, item detail with type chips (consumes ClipRepository + the contracts —
-      first consumer, so the contract review gate activates after this unit).
 - [ ] Onboarding first-run gating + real settings persistence — needs DataStore
       (dependency review gate); the disclosure screen content already exists in-app.
 - [ ] Capture ladder integration: share-to-tactos target, manual add, foreground refresh,
@@ -95,6 +92,12 @@ Architecture principles (binding on v1 design so V2 stays reachable — see `mem
       and explain what's wrong; QR from the clipboard URL.
 
 ## Done
+- 2026-07-10 — Unit 6: `feature/clipboard` timeline UI (search, type/category chips,
+  pinned-first list, favorite toggle, manual add via ContentDetector, detail sheet with
+  copy/share/pin/favorite/delete + category editor); ClipboardToolbox = first contract
+  consumer (gate #4 active; stable ids clipboard.copy/share/pin); Room kept encapsulated
+  behind TactosDb.repository(). CI run #10 green (6eebf86). V2 vision recorded same
+  session (62fd26a).
 - 2026-07-10 — Unit 5: `core/design` TactosTheme (dynamic + static palettes, light/dark)
   + ToolboxCard; app shell with ModuleRegistry-driven home grid, settings skeleton,
   DRAFT capture-disclosure screen; ToolboxModule.emoji contract addition. CI run #6
