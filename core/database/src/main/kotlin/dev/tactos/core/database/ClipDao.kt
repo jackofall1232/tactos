@@ -9,9 +9,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ClipDao {
 
-    /** Pinned items first, then newest first. */
-    @Query("SELECT * FROM clip_items ORDER BY pinned DESC, created_at DESC")
-    fun timeline(): Flow<List<ClipItemEntity>>
+    /**
+     * Pinned items first, then newest first, capped at [limit] rows so an
+     * ever-growing history can never balloon the UI's memory (PR #1 review).
+     * Search still covers the full table.
+     */
+    @Query("SELECT * FROM clip_items ORDER BY pinned DESC, created_at DESC LIMIT :limit")
+    fun timeline(limit: Int): Flow<List<ClipItemEntity>>
 
     /**
      * Case-insensitive substring search over [ClipItemEntity.textLc].

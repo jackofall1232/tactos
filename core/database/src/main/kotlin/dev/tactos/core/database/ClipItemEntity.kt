@@ -19,7 +19,7 @@ import dev.tactos.core.model.ClipType
     indices = [
         Index("content_hash"),
         Index("created_at"),
-        Index("pinned"),
+        Index(value = ["pinned", "created_at"]),
         Index("favorite"),
     ],
 )

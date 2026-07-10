@@ -152,6 +152,17 @@ class ClipRepositoryTest {
         assertEquals(listOf("pinned-old", "new", "old"), texts)
     }
 
+    @Test
+    fun `timeline respects the row limit, newest surviving`() = runTest {
+        repo.save(item("one", createdAt = 1L))
+        repo.save(item("two", createdAt = 2L))
+        repo.save(item("three", createdAt = 3L))
+        assertEquals(
+            listOf("three", "two"),
+            repo.timeline(limit = 2).first().map { it.text },
+        )
+    }
+
     // --- flags and delete ---
 
     @Test

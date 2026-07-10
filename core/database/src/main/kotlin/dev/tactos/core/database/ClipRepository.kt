@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.map
  */
 class ClipRepository(private val dao: ClipDao) {
 
-    fun timeline(): Flow<List<ClipItem>> =
-        dao.timeline().map { rows -> rows.map { it.toClipItem() } }
+    fun timeline(limit: Int = DEFAULT_TIMELINE_LIMIT): Flow<List<ClipItem>> =
+        dao.timeline(limit).map { rows -> rows.map { it.toClipItem() } }
 
     /** Persist a capture, collapsing consecutive duplicates. Returns the row id. */
     suspend fun save(item: ClipItem): Long = dao.upsertDedup(item.toEntity())
@@ -47,4 +47,9 @@ class ClipRepository(private val dao: ClipDao) {
 
     private fun escapeLike(value: String): String =
         value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+    companion object {
+        /** Rows the live timeline exposes; full history stays searchable. */
+        const val DEFAULT_TIMELINE_LIMIT: Int = 500
+    }
 }

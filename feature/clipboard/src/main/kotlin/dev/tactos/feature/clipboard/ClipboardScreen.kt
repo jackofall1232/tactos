@@ -36,6 +36,7 @@ import dev.tactos.core.database.ClipRepository
 import dev.tactos.core.detect.ContentDetector
 import dev.tactos.core.model.ClipItem
 import dev.tactos.core.model.ClipType
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -59,7 +60,13 @@ fun ClipboardScreen(
     val timeline by repository.timeline().collectAsState(initial = emptyList())
     var searchResults by remember { mutableStateOf<List<ClipItem>?>(null) }
     LaunchedEffect(query, refresh, timeline) {
-        searchResults = if (query.isBlank()) null else repository.search(query)
+        if (query.isBlank()) {
+            searchResults = null
+        } else {
+            // Debounce keystrokes; effect restart cancels the pending query.
+            delay(300)
+            searchResults = repository.search(query)
+        }
     }
 
     val base = searchResults ?: timeline
