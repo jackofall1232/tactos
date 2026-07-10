@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "lock_id": "lock-20260710T211500Z-claude-supervised-build",
-  "owner_agent": "claude",
-  "owner_session": "session_01UeB6KJmStu36oYqkGKcp5w",
+  "owner_agent": null,
+  "owner_session": null,
   "acquired_at": "2026-07-10T21:15:00Z",
   "expires_at": "2026-07-10T22:15:00Z",
   "ttl_seconds": 3600,
-  "purpose": "supervised build loop: unit 1 (Gradle multi-module project) onward",
+  "purpose": null,
   "protected_paths": [
     "ledger.md",
     "memory.md",
@@ -18,5 +18,5 @@
     "reviews/",
     "sessions/"
   ],
-  "status": "active"
+  "status": "released"
 }

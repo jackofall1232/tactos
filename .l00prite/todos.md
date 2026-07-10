@@ -1,13 +1,6 @@
 # Prioritized TODOs
 
 ## Next
-- [ ] Replace the placeholder skeleton with the real Gradle multi-module project per the
-      `CLAUDE.md` §2 mapping: checked-in wrapper, `gradle/libs.versions.toml`, `app/` +
-      `core/model/` + `core/detect/` modules compiling, `./gradlew assembleDebug` green.
-- [ ] `core/model`: `ClipItem`, `ClipType`, `ToolboxModule`, `ClipAction` contracts + unit
-      tests.
-- [ ] `core/detect`: URL / IPv4 / IPv6 / hex+rgb color / JSON / email / phone detectors
-      with table-driven adversarial unit tests (pure Kotlin, no Android deps).
 - [ ] Spike: verify AccessibilityService clipboard capture on an emulator (API 29+ and
       34+), record the working mechanism and its limits in `.l00prite/memory.md` before
       building the full capture feature.
@@ -65,5 +58,20 @@ Phase order for the full vision (one toolbox phase at a time; each is its own
       service, listing assets, release signing, data-safety form.
 
 ## Done
+- 2026-07-10 — Unit 3: `core/detect` — six detectors + ContentDetector priority chain,
+  ~415 blind adversarial test assertions (local suite green; see ledger).
+- 2026-07-10 — Unit 2: `core/model` contracts (ClipType, ClipItem + contentHashOf,
+  ClipAction, ToolboxModule, ModuleRegistry), 15 tests, CI-green (run 29126121268).
+- 2026-07-10 — Unit 1: real Gradle multi-module project (wrapper, catalog, :app Compose
+  shell w/ zero-permission manifest, :core:model, :core:detect, real CI) — assembleDebug
+  green in CI, debug APK artifact uploaded (run 29126121268).
 - 2026-07-10 — l00prite Planning Mode scaffold: CLAUDE.md, AGENTS.md, `.l00prite/` memory
   + prompts, `.claude/`/`.codex/` mirrors, vendor adapters, large-tier Kotlin skeleton.
+
+## Notes for the next session
+- This remote sandbox cannot reach Google Maven / dl.google.com (network policy):
+  verify JVM modules locally with `--configure-on-demand`; Android targets verify in CI.
+- Room DAO tests will need Robolectric or instrumented tests — new dependency ⇒ human
+  review gate before adding.
+- Toolchain bump (AGP/Compose BOM/androidx to current stable) queued — bump, let CI
+  verify, keep pins in `gradle/libs.versions.toml`.

@@ -201,6 +201,7 @@ v1 is done when, verified with evidence recorded in the Run Ledger and `.l00prit
 
 | Session | Date | Built | Tested | Status |
 |---------|------|-------|--------|--------|
+| Supervised build, units 1–3 | 2026-07-10 | Gradle multi-module project (wrapper, catalog, `:app` Compose shell with zero-permission manifest, real CI); `core/model` contracts (ClipType, ClipItem + contentHashOf, ClipAction, ToolboxModule, ModuleRegistry); `core/detect` detectors (URL/email/IP/color/JSON/phone + priority chain) built by two blind agents from one spec, one mismatch adjudicated | Local: `gradle :core:model:test :core:detect:test --configure-on-demand` (36 test methods, ~430 assertions, 0 failures). CI run 29126121268: `assembleDebug` + `test` + `:app:lintDebug` green, debug APK artifact uploaded | In review |
 
 <!-- This table is a living log. Each build session should append a row, not overwrite
      prior rows. -->
