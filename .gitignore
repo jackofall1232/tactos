@@ -1,1 +1,26 @@
-# .gitignore stub — filled in by the build loop, not by l00prite
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Android
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk.idsig
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Never commit keystores or secrets (see .l00prite/constraints.md)
+*.jks
+*.keystore
+keystore.properties
+.env
+.env.*
