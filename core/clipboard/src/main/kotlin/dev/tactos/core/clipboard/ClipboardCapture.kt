@@ -45,9 +45,14 @@ class ClipboardCapture(private val store: suspend (ClipItem) -> Long) {
         // Intent-backed clips (app shortcuts etc.) are never text.
         if (item.intent != null && item.text == null) return Result.NothingToCapture
         // coerceToText can resolve content URIs (provider/disk I/O) — keep
-        // it off the main thread.
+        // it off the main thread, and never let a misbehaving provider
+        // crash a capture attempt.
         val text = withContext(Dispatchers.IO) {
-            item.coerceToText(context)?.toString()?.trim()
+            try {
+                item.coerceToText(context)?.toString()?.trim()
+            } catch (e: RuntimeException) {
+                null
+            }
         }
         if (text.isNullOrEmpty()) return Result.NothingToCapture
         // For unresolvable URIs (an image or file copy), coerceToText falls

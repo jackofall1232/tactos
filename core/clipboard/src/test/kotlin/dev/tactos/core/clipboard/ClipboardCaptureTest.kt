@@ -1,6 +1,7 @@
 package dev.tactos.core.clipboard
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -93,10 +94,15 @@ class ClipboardCaptureTest {
 
     @Test
     fun `uri-only clip that coerces to its own uri string captures nothing`() = runTest {
-        // No provider backs this URI, so coerceToText falls back to
-        // uri.toString() — which must not be stored as a text clip.
+        // No provider backs this URI, so coercion yields the raw
+        // content:// string (or fails) — either way nothing is stored.
+        // Built directly: ClipData.newUri would query the (absent) provider.
         val uri = Uri.parse("content://media/external/images/media/42")
-        clipboard.setPrimaryClip(ClipData.newUri(context.contentResolver, "image", uri))
+        val clip = ClipData(
+            ClipDescription("image", arrayOf("image/jpeg")),
+            ClipData.Item(uri),
+        )
+        clipboard.setPrimaryClip(clip)
 
         val result = capture.captureCurrent(context)
 
