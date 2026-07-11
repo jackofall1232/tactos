@@ -4,6 +4,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import dev.tactos.core.detect.ContentDetector
 import dev.tactos.core.model.ClipItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * The capture rungs that need no special access: reading the system
@@ -39,7 +41,11 @@ class ClipboardCapture(private val store: suspend (ClipItem) -> Long) {
         val clip = manager.primaryClip ?: return Result.NothingToCapture
         if (SensitiveClips.isSensitive(clip.description)) return Result.SkippedSensitive
         if (clip.itemCount == 0) return Result.NothingToCapture
-        val text = clip.getItemAt(0).coerceToText(context)?.toString()?.trim()
+        // coerceToText can resolve content URIs (provider/disk I/O) — keep
+        // it off the main thread.
+        val text = withContext(Dispatchers.IO) {
+            clip.getItemAt(0).coerceToText(context)?.toString()?.trim()
+        }
         if (text.isNullOrEmpty()) return Result.NothingToCapture
         return persist(text, sourceHint)
     }

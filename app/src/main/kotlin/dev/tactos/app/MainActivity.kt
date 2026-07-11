@@ -41,6 +41,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // Keep getIntent() pointing at the latest delivery, not the launch intent.
+        setIntent(intent)
         ingestShare(intent)
     }
 

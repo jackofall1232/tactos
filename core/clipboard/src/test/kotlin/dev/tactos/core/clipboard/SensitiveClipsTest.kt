@@ -9,8 +9,10 @@ import org.robolectric.annotation.Config
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+// Runs on API 26 too: ClipDescription.get/setExtras are API 24+ platform
+// API, so the sensitive check needs no SDK_INT guard on minSdk 26.
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [26, 34])
 class SensitiveClipsTest {
 
     private fun description(extras: PersistableBundle? = null) =
