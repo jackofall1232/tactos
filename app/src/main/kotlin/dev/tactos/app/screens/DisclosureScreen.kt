@@ -36,8 +36,9 @@ fun DisclosureBody() {
     )
     Heading("How capture works today")
     Paragraph(
-        "• When you open tactos, whatever is on the clipboard is saved to your " +
-            "timeline (you can turn this off in Settings).\n" +
+        "• If you turn capture on (it starts off — you choose below and can " +
+            "change it any time in Settings), whatever is on the clipboard is " +
+            "saved to your timeline when you open tactos.\n" +
             "• You can share text to tactos from any app's share menu.\n" +
             "• You can add clips by hand with the + button.",
     )

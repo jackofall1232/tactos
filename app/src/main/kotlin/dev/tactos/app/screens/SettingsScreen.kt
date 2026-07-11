@@ -1,6 +1,8 @@
 package dev.tactos.app.screens
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -123,7 +125,11 @@ fun SettingsScreen(
             onClick = {
                 // User-initiated hand-off to the browser — the app itself has
                 // no INTERNET permission and never talks to the network.
-                context.startActivity(Intent(Intent.ACTION_VIEW, REPO_URL.toUri()))
+                try {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, REPO_URL.toUri()))
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(context, "No browser available", Toast.LENGTH_SHORT).show()
+                }
             },
         )
     }

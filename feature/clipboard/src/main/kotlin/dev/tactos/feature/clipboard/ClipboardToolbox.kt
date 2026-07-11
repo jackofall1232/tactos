@@ -9,11 +9,15 @@ import dev.tactos.core.model.ToolboxModule
  * ToolboxModule/ClipAction contracts have a consumer, so contract changes
  * are review-gated (CLAUDE.md section 6).
  *
- * Every capability is declared as a [ClipAction] descriptor and executed
- * through the id-keyed [ClipActionExecutors] registry — never as an ad-hoc
- * UI callback. This is a binding design constraint (.l00prite/memory.md):
- * the same descriptors later become the V2 AI workflow engine's
- * model-invocable tool registry. All ids below are stable API.
+ * Every clip action is declared as a [ClipAction] descriptor and executed
+ * through the id-keyed executor registry — never as an ad-hoc capability
+ * callback. This is a binding design constraint (.l00prite/memory.md): the
+ * same descriptors later become the V2 AI workflow engine's model-invocable
+ * tool registry. Timeline metadata operations (favorite, delete,
+ * set-category) intentionally stay UI-level in v1 — CLAUDE.md section 3
+ * scopes the universal actions to copy/share/pin — and must gain
+ * descriptors before the V2 registry consumes this seam. All ids below are
+ * stable API.
  */
 object ClipboardToolbox : ToolboxModule {
     override val id: String = "clipboard"

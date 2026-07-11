@@ -14,7 +14,7 @@ Dependencies point strictly downward; `core/model` is the only module everything
                         ┌─────────────────────────────┐
                         │            app/              │  Android application
                         │  shell, nav, ModuleRegistry  │  (zero-permission manifest)
-                        │  wiring, action executors    │
+                        │  wiring, settings, capture   │
                         └──────────────┬──────────────┘
                                        │
                  ┌─────────────────────┼──────────────────────┐
@@ -44,8 +44,10 @@ Dependencies point strictly downward; `core/model` is the only module everything
 
 Pure-JVM modules (`core/model`, `core/detect`, `core/actions`) have no Android dependency
 at all. `core/database`, `core/clipboard`, `core/design`, and `feature/clipboard` are
-Android libraries; `app/` is the only application module and the only place platform
-side-effects (clipboard manager, share intents, browser launches) are bound.
+Android libraries; `app/` is the only application module. Platform side-effects are bound
+in the UI layers that own them: the clipboard-toolbox executors return pure `ActionEffect`
+values that `feature/clipboard`'s detail sheet interprets (clipboard writes, share intents,
+browser launches), while `app/` binds capture, settings, and navigation.
 
 ## Data flow of a clip
 
@@ -89,11 +91,15 @@ Step by step:
 contributing module, applicable clip types — with no execute method:
 
 - Modules *declare* capabilities: `ClipboardToolbox.clipActions()` returns descriptors
-  like `clipboard.copy` / `clipboard.share` / `clipboard.pin`.
-- The **app layer** owns an executor registry that binds each stable action id to platform
-  work (launch a browser, invoke the share sheet, render a QR bitmap). `core/model` never
-  touches Android, so the contract compiles anywhere and stays consumable by future
-  out-of-process plugins.
+  like `clipboard.copy` / `clipboard.share` / `clipboard.pin` and the type-specific
+  `clipboard.url.*` / `clipboard.color.*` / `clipboard.json.*` actions.
+- An id-keyed **executor registry** (`ClipActionExecutors` in `feature/clipboard`) maps
+  each stable action id to a pure function returning an `ActionEffect`; the UI interprets
+  effects into platform work (launch a browser, invoke the share sheet, render a QR
+  bitmap). `core/model` never touches Android, so the contract compiles anywhere and
+  stays consumable by future out-of-process plugins. In v1 the timeline metadata
+  operations (favorite, delete, set-category) remain plain UI callbacks — they gain
+  descriptors before the V2 intent registry consumes this seam.
 - Pure computation behind actions (color-space conversion, JSON validate/beautify/minify,
   QR matrix encoding) lives in `core/actions`, unit-testable on the JVM with no emulator.
 

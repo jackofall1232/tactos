@@ -32,7 +32,8 @@ fun OnboardingScreen(
     onFinish: (captureOnFocus: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var captureOnFocus by rememberSaveable { mutableStateOf(true) }
+    // Off until the user flips it — every capture rung is opt-in (CLAUDE.md §2).
+    var captureOnFocus by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier

@@ -55,10 +55,11 @@ capture, all of them under your control:
 
 1. **Share to tactos.** Select text in any app, hit share, pick tactos. The text lands in
    your timeline. Works everywhere, requires nothing.
-2. **Foreground capture.** Whenever you open tactos, it reads whatever is currently on the
-   clipboard and saves it (Android allows clipboard reads for the app in the foreground).
-   So the habit is: copy things as you go, open tactos when you want them kept. This can
-   be switched off in settings.
+2. **Foreground capture.** If you enable it (it is off by default — you choose during
+   onboarding), tactos reads whatever is currently on the clipboard whenever you open the
+   app and saves it (Android allows clipboard reads for the app in the foreground). So the
+   habit is: copy things as you go, open tactos when you want them kept. You can change
+   this any time in settings.
 3. **Manual add.** Type or paste anything into the timeline yourself.
 
 **What tactos does not do yet:** automatic background capture. A future version plans to

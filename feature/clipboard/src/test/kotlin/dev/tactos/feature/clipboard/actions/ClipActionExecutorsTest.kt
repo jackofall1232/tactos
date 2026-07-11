@@ -70,6 +70,24 @@ class ClipActionExecutorsTest {
     }
 
     @Test
+    fun `url open defaults scheme-less urls to https`() {
+        val effect = effectOf(
+            ClipboardToolbox.ACTION_URL_OPEN,
+            clip("www.example.com", ClipType.URL),
+        )
+        assertEquals(ActionEffect.OpenUrl("https://www.example.com"), effect)
+    }
+
+    @Test
+    fun `url open keeps an existing scheme, case-insensitively`() {
+        val effect = effectOf(
+            ClipboardToolbox.ACTION_URL_OPEN,
+            clip("HTTPS://Example.com", ClipType.URL),
+        )
+        assertEquals(ActionEffect.OpenUrl("HTTPS://Example.com"), effect)
+    }
+
+    @Test
     fun `url qr trims the text`() {
         val effect = effectOf(
             ClipboardToolbox.ACTION_URL_QR,

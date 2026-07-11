@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.map
  */
 data class TactosSettings(
     val onboardingComplete: Boolean = false,
-    /** Save whatever is on the clipboard whenever tactos gains focus. */
-    val captureOnFocus: Boolean = true,
+    /** Save whatever is on the clipboard whenever tactos gains focus. Opt-in. */
+    val captureOnFocus: Boolean = false,
     /** Auto-delete clips older than this many days; 0 keeps everything. */
     val retentionDays: Int = 0,
     /** Keep at most this many unpinned clips; 0 means unlimited. */
@@ -31,7 +31,7 @@ class SettingsRepository(private val context: Context) {
     val settings: Flow<TactosSettings> = context.settingsDataStore.data.map { prefs ->
         TactosSettings(
             onboardingComplete = prefs[KEY_ONBOARDING_COMPLETE] ?: false,
-            captureOnFocus = prefs[KEY_CAPTURE_ON_FOCUS] ?: true,
+            captureOnFocus = prefs[KEY_CAPTURE_ON_FOCUS] ?: false,
             retentionDays = prefs[KEY_RETENTION_DAYS] ?: 0,
             retentionMaxItems = prefs[KEY_RETENTION_MAX_ITEMS] ?: 0,
         )

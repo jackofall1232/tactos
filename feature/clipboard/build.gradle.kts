@@ -29,8 +29,10 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":core:model"))
-    // api: ActionEffect exposes core/actions types (ColorValue) in its public surface.
+    // api: the module's public surface exposes core/model types (ClipItem,
+    // ClipAction, the ToolboxModule supertype) and core/actions types
+    // (ColorValue in ActionEffect).
+    api(project(":core:model"))
     api(project(":core:actions"))
     implementation(project(":core:database"))
     implementation(project(":core:design"))

@@ -16,13 +16,26 @@ typealias ClipActionExecutor = (ClipItem) -> ActionEffect
  */
 object ClipActionExecutors {
 
+    /** Mirrors UrlDetector's scheme list in core/detect. */
+    private val WEB_SCHEMES = listOf("http://", "https://", "ftp://", "ftps://")
+
     fun forId(actionId: String): ClipActionExecutor? = executors[actionId]
 
     private val executors: Map<String, ClipActionExecutor> = mapOf(
         ClipboardToolbox.ACTION_COPY to { item -> ActionEffect.CopyText(item.text) },
         ClipboardToolbox.ACTION_SHARE to { item -> ActionEffect.ShareText(item.text) },
         ClipboardToolbox.ACTION_PIN to { _ -> ActionEffect.TogglePin },
-        ClipboardToolbox.ACTION_URL_OPEN to { item -> ActionEffect.OpenUrl(item.text.trim()) },
+        ClipboardToolbox.ACTION_URL_OPEN to { item ->
+            // UrlDetector accepts scheme-less "www." URLs, but ACTION_VIEW
+            // resolves nothing without a scheme — default to https.
+            val text = item.text.trim()
+            val url = if (WEB_SCHEMES.any { text.startsWith(it, ignoreCase = true) }) {
+                text
+            } else {
+                "https://$text"
+            }
+            ActionEffect.OpenUrl(url)
+        },
         ClipboardToolbox.ACTION_URL_QR to { item -> ActionEffect.ShowQr(item.text.trim()) },
         ClipboardToolbox.ACTION_COLOR_CONVERT to { item ->
             val color = ColorValue.parse(item.text)
