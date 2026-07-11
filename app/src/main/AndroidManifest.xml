@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- tactos v1 privacy invariant: this manifest declares NO permissions.
-     Any permission addition is a human review gate (CLAUDE.md section 6). -->
+     Any permission, service, or receiver addition is a human review gate
+     (CLAUDE.md section 6). The only intent-filters below are the launcher
+     entry and the share-to-tactos text target — no special access either. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:label="tactos"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"
         android:supportsRtl="true"
         android:theme="@style/Theme.Tactos">
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Share-to-tactos rung of the capture ladder: plain-text shares
+                 from any app land in the timeline. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
     </application>

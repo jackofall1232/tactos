@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 /**
  * The clipboard-capture disclosure. This is a trust document: the final
  * wording is a human review gate (CLAUDE.md section 8) — the text below is a
- * DRAFT for that review, shipped read-only. The onboarding flow will present
- * it before any capture option can be enabled.
+ * DRAFT for that review, shipped read-only. Onboarding presents the same
+ * body before any capture option can be enabled.
  */
 @Composable
 fun DisclosureScreen(modifier: Modifier = Modifier) {
@@ -23,35 +23,49 @@ fun DisclosureScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Paragraph(
-            "tactos can keep a history of what you copy, so you can find it again later. " +
-                "Because of Android's privacy rules, automatic capture in the background " +
-                "only works if you turn on the tactos accessibility service.",
-        )
-        Heading("What the accessibility service does")
-        Paragraph(
-            "It watches for clipboard changes and saves new copies into your on-device " +
-                "timeline. That is all it does.",
-        )
-        Heading("What tactos never does")
-        Paragraph(
-            "• Never sends your clipboard (or anything else) off this device.\n" +
-                "• Never shows ads, never tracks you, never asks for an account.\n" +
-                "• Never stores clips that apps mark as sensitive (like passwords) in " +
-                "plain view.\n" +
-                "• Never requires the accessibility service — you can decline it and add " +
-                "clips by sharing to tactos or opening the app.",
-        )
-        Heading("You stay in control")
-        Paragraph(
-            "You can turn capture off at any time in Settings, delete any item, or clear " +
-                "the whole history. Auto-cleanup can trim old items for you.",
-        )
-        Paragraph(
-            "This wording is a draft pending maintainer review.",
-            emphasized = true,
-        )
+        DisclosureBody()
     }
+}
+
+/** The disclosure text itself, shared by [DisclosureScreen] and onboarding. */
+@Composable
+fun DisclosureBody() {
+    Paragraph(
+        "tactos can keep a history of what you copy, so you can find it again later. " +
+            "Everything stays on this device, in tactos's private storage.",
+    )
+    Heading("How capture works today")
+    Paragraph(
+        "• When you open tactos, whatever is on the clipboard is saved to your " +
+            "timeline (you can turn this off in Settings).\n" +
+            "• You can share text to tactos from any app's share menu.\n" +
+            "• You can add clips by hand with the + button.",
+    )
+    Heading("Automatic background capture")
+    Paragraph(
+        "Because of Android's privacy rules, capturing copies made while tactos is " +
+            "closed would need the tactos accessibility service. That service is not " +
+            "part of the app yet — when it arrives it will be strictly opt-in, behind " +
+            "this disclosure, and will do nothing except watch for clipboard changes.",
+    )
+    Heading("What tactos never does")
+    Paragraph(
+        "• Never sends your clipboard (or anything else) off this device — the app " +
+            "doesn't even hold the permission to use the internet.\n" +
+            "• Never shows ads, never tracks you, never asks for an account.\n" +
+            "• Never stores clips that other apps mark as sensitive, like passwords " +
+            "copied from a password manager.",
+    )
+    Heading("You stay in control")
+    Paragraph(
+        "You can turn capture off at any time in Settings, delete any item, or let " +
+            "auto-cleanup trim old items for you. Pinned and favorite clips are " +
+            "always kept.",
+    )
+    Paragraph(
+        "This wording is a draft pending maintainer review.",
+        emphasized = true,
+    )
 }
 
 @Composable
