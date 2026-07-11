@@ -33,6 +33,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -47,9 +48,11 @@ dependencies {
     implementation(project(":core:detect"))
     implementation(project(":core:design"))
     implementation(project(":core:database"))
+    implementation(project(":core:clipboard"))
     implementation(project(":feature:clipboard"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.datastore.preferences)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)

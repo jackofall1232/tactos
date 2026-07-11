@@ -47,6 +47,8 @@ import kotlinx.coroutines.launch
 fun ClipboardScreen(
     repository: ClipRepository,
     modifier: Modifier = Modifier,
+    /** Invoked after any save so the host can enforce retention rules. */
+    afterSave: suspend () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     var query by rememberSaveable { mutableStateOf("") }
@@ -187,6 +189,7 @@ fun ClipboardScreen(
                             createdAt = System.currentTimeMillis(),
                         ),
                     )
+                    afterSave()
                     refresh++
                 }
                 showAdd = false
@@ -213,6 +216,19 @@ fun ClipboardScreen(
             onSetCategory = { category ->
                 scope.launch {
                     repository.setCategory(item.id, category.ifBlank { null })
+                    refresh++
+                }
+            },
+            onSaveAsClip = { text ->
+                scope.launch {
+                    repository.save(
+                        ClipItem(
+                            text = text,
+                            type = ContentDetector.detect(text),
+                            createdAt = System.currentTimeMillis(),
+                        ),
+                    )
+                    afterSave()
                     refresh++
                 }
             },

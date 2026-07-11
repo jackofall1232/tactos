@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--
+  This page loads no scripts, no fonts, no cookies, no trackers.
+  View source and check the network tab — that's the point.
+
+  tactos is privacy-first software; its website plays by the same rules.
+  One HTML file, system fonts, inline SVG, zero external requests.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>tactos — fifty tiny apps. one tactos.</title>
+<meta name="description" content="tactos is an open-source, privacy-first Android multi-tool built around a smart clipboard timeline. Zero permissions, zero ads, zero accounts — everything stays on your device.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#191C1C">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAFDFC">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20x='4'%20y='3.5'%20width='16'%20height='19'%20rx='4.5'%20fill='%2300696D'/%3E%3Crect%20x='8'%20y='1.5'%20width='8'%20height='4.5'%20rx='2.25'%20fill='%2380D4D9'/%3E%3Crect%20x='7.5'%20y='10'%20width='9'%20height='2'%20rx='1'%20fill='%239CF1F5'/%3E%3Crect%20x='7.5'%20y='14'%20width='6'%20height='2'%20rx='1'%20fill='%239CF1F5'/%3E%3C/svg%3E">
+<style>
+/* ---------- tokens (palette from core/design Theme.kt) ---------- */
+:root {
+  color-scheme: dark;
+  --bg: #191C1C;
+  --bg-raise: #1E2323;
+  --surface: #212727;
+  --surface-high: #273030;
+  --on-bg: #E0E3E2;
+  --muted: #BEC8C9;
+  --primary: #80D4D9;
+  --on-primary: #003739;
+  --primary-container: #004F52;
+  --on-primary-container: #9CF1F5;
+  --amber: #FFB693;
+  --amber-container: #7B2F0C;
+  --on-amber-container: #FFDBCC;
+  --outline: #3F4949;
+  --outline-soft: #2A3232;
+  --code-bg: #10403f2e;
+  --shadow: 0 12px 32px rgb(0 0 0 / .35);
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --bg: #FAFDFC;
+    --bg-raise: #F1F7F6;
+    --surface: #ECF3F2;
+    --surface-high: #E0EBEA;
+    --on-bg: #191C1C;
+    --muted: #3F4949;
+    --primary: #00696D;
+    --on-primary: #FFFFFF;
+    --primary-container: #9CF1F5;
+    --on-primary-container: #002021;
+    --amber: #9A4522;
+    --amber-container: #FFDBCC;
+    --on-amber-container: #380D00;
+    --outline: #C6D3D3;
+    --outline-soft: #DAE4E5;
+    --code-bg: #00696d14;
+    --shadow: 0 12px 32px rgb(0 33 33 / .12);
+  }
+}
+
+/* ---------- base ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+html { scroll-padding-top: 5.5rem; }
+body {
+  background: var(--bg);
+  color: var(--on-bg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  font-size: 1.0625rem;
+  -webkit-text-size-adjust: 100%;
+}
+img, svg { max-width: 100%; }
+a { color: var(--primary); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+::selection { background: var(--primary-container); color: var(--on-primary-container); }
+code {
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: .9em;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: .1em .4em;
+}
+.wrap { max-width: 68rem; margin-inline: auto; padding-inline: clamp(1.25rem, 4vw, 2.5rem); }
+section { padding-block: clamp(3.5rem, 8vw, 6.5rem); }
+.overline {
+  display: block;
+  color: var(--amber);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  margin-bottom: .75rem;
+}
+h2 {
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  margin-bottom: 1rem;
+  text-wrap: balance;
+}
+.lede { color: var(--muted); max-width: 46rem; }
+
+.skip {
+  position: absolute;
+  left: 1rem; top: -4rem;
+  z-index: 100;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: .6rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top .15s ease;
+}
+.skip:focus-visible { top: 1rem; }
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- header / nav ---------- */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--outline-soft);
+}
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-block: .8rem;
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--on-bg);
+  text-decoration: none;
+}
+.wordmark svg { width: 1.7rem; height: 1.7rem; flex: none; }
+.glyph-body { fill: var(--primary); }
+.glyph-clip { fill: var(--primary-container); }
+.glyph-line { fill: var(--on-primary); }
+@media (prefers-color-scheme: light) {
+  .glyph-clip { fill: #80D4D9; }
+}
+.nav ul {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  flex-wrap: wrap;
+  list-style: none;
+}
+.nav ul a {
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: .95rem;
+  padding: .45rem .85rem;
+  border-radius: 999px;
+}
+.nav ul a:hover { color: var(--on-bg); background: var(--surface); }
+.nav .gh { color: var(--primary); }
+
+/* ---------- buttons & pills ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  border-radius: 999px;
+  padding: .85rem 1.7rem;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn svg { width: 1.15em; height: 1.15em; flex: none; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-primary:hover { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 22%, transparent); }
+.btn-ghost { color: var(--on-bg); border-color: var(--outline); }
+.btn-ghost:hover { background: var(--surface); }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--amber-container);
+  color: var(--on-amber-container);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: .3rem .8rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; padding-block: clamp(3.5rem, 9vw, 7rem); }
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20%;
+  z-index: -1;
+  background:
+    radial-gradient(38rem 24rem at 18% 30%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 68%),
+    radial-gradient(30rem 22rem at 85% 15%, color-mix(in srgb, var(--amber) 12%, transparent), transparent 70%),
+    radial-gradient(34rem 26rem at 70% 90%, color-mix(in srgb, var(--primary-container) 45%, transparent), transparent 72%);
+  filter: saturate(1.05);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero::before { animation: drift 26s ease-in-out infinite alternate; }
+  @keyframes drift {
+    from { transform: translate3d(-2%, -1%, 0) scale(1); }
+    to   { transform: translate3d(2%, 2%, 0) scale(1.06); }
+  }
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+h1 {
+  font-size: clamp(2.4rem, 6.5vw, 4rem);
+  line-height: 1.06;
+  letter-spacing: -.03em;
+  margin-bottom: 1.1rem;
+  text-wrap: balance;
+}
+h1 .accent { color: var(--primary); }
+.hero p.sub {
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  color: var(--muted);
+  max-width: 34em;
+  margin-bottom: 1.8rem;
+}
+.cta-row {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+  flex-wrap: wrap;
+  margin-bottom: .9rem;
+}
+.hero .caption { font-size: .9rem; color: var(--muted); max-width: 36em; }
+
+/* ---------- phone mockup (stylized illustration, not a screenshot) ---------- */
+.phone-slot { display: grid; justify-items: center; gap: .8rem; }
+.phone {
+  width: min(19.5rem, 88vw);
+  border: 1px solid var(--outline);
+  border-radius: 2.4rem;
+  padding: .55rem;
+  background: var(--bg-raise);
+  box-shadow: var(--shadow);
+}
+.screen {
+  border-radius: 1.9rem;
+  background: var(--bg);
+  border: 1px solid var(--outline-soft);
+  overflow: hidden;
+  padding: .8rem .8rem 1rem;
+  display: grid;
+  gap: .6rem;
+  font-size: .8rem;
+}
+.statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 600;
+  padding-inline: .35rem;
+}
+.statusbar .sicons { display: inline-flex; gap: .3rem; align-items: center; }
+.statusbar svg { width: .85rem; height: .85rem; }
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-weight: 700;
+  font-size: .95rem;
+  padding-inline: .2rem;
+}
+.appbar svg { width: 1.05rem; height: 1.05rem; }
+.searchfield {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--surface-high);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: .55rem .9rem;
+}
+.searchfield svg { width: .95rem; height: .95rem; flex: none; }
+.chiprow { display: flex; gap: .4rem; flex-wrap: wrap; }
+.chip {
+  border: 1px solid var(--outline);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: .22rem .7rem;
+  font-weight: 600;
+  font-size: .72rem;
+  white-space: nowrap;
+}
+.chip.sel {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-color: transparent;
+}
+.clip {
+  background: var(--surface);
+  border: 1px solid var(--outline-soft);
+  border-radius: 1.1rem;
+  padding: .65rem .75rem;
+  display: grid;
+  gap: .45rem;
+}
+.clip .meta {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .66rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.tchip {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: 999px;
+  padding: .1rem .55rem;
+  letter-spacing: .04em;
+}
+.tchip.amber { background: var(--amber-container); color: var(--on-amber-container); }
+.clip .txt {
+  font-size: .78rem;
+  overflow-wrap: anywhere;
+}
+.clip .txt.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .72rem; }
+.clip .acts { display: flex; gap: .4rem; flex-wrap: wrap; }
+.achip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  padding: .18rem .6rem;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+.achip svg { width: .8rem; height: .8rem; }
+.swatchrow { display: flex; align-items: center; gap: .55rem; }
+.swatch {
+  width: 1.9rem; height: 1.9rem;
+  border-radius: .6rem;
+  background: #00696D;
+  border: 1px solid var(--outline);
+  flex: none;
+}
+.phone-note { font-size: .8rem; color: var(--muted); }
+
+/* ---------- features ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  margin-top: 2.2rem;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--outline-soft);
+  border-radius: 1.5rem;
+  padding: 1.5rem 1.4rem;
+}
+.card .icon {
+  width: 2.6rem; height: 2.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: .9rem;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  margin-bottom: 1rem;
+}
+.card .icon svg { width: 1.4rem; height: 1.4rem; }
+.card h3 { font-size: 1.12rem; margin-bottom: .45rem; letter-spacing: -.01em; }
+.card p { color: var(--muted); font-size: .95rem; }
+
+/* ---------- privacy ---------- */
+.privacy { background: var(--bg-raise); border-block: 1px solid var(--outline-soft); }
+.priv-list { list-style: none; display: grid; gap: .9rem; margin-top: 2rem; max-width: 46rem; }
+.priv-list li { display: flex; gap: .8rem; align-items: flex-start; }
+.priv-list svg { width: 1.35rem; height: 1.35rem; flex: none; color: var(--primary); margin-top: .2rem; }
+.priv-list strong { display: block; }
+.priv-list span { color: var(--muted); font-size: .95rem; }
+.samerules {
+  margin-top: 2rem;
+  max-width: 46rem;
+  background: var(--surface);
+  border: 1px solid var(--outline-soft);
+  border-left: 4px solid var(--primary);
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+/* ---------- capture ---------- */
+.rungs { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.1rem; margin-top: 2.2rem; }
+.rung {
+  background: var(--surface);
+  border: 1px solid var(--outline-soft);
+  border-radius: 1.5rem;
+  padding: 1.4rem;
+  display: grid;
+  gap: .5rem;
+  align-content: start;
+}
+.rung .num {
+  width: 2.2rem; height: 2.2rem;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 800;
+  font-size: 1rem;
+}
+.rung h3 { font-size: 1.08rem; }
+.rung p { color: var(--muted); font-size: .95rem; }
+.rung.planned { border: 2px dashed var(--outline); background: transparent; }
+.rung.planned .num {
+  background: transparent;
+  border: 2px dashed var(--outline);
+  color: var(--muted);
+}
+.planned-flag {
+  justify-self: start;
+  background: var(--amber-container);
+  color: var(--on-amber-container);
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .2rem .7rem;
+}
+
+/* ---------- install ---------- */
+.install-cols { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.1rem; margin-top: 2.2rem; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--outline-soft);
+  border-radius: 1.75rem;
+  padding: 1.7rem 1.6rem;
+}
+.panel h3 { font-size: 1.15rem; margin-bottom: 1rem; }
+.panel ol { padding-left: 1.3rem; display: grid; gap: .7rem; color: var(--muted); font-size: .97rem; }
+.panel ol ::marker { color: var(--primary); font-weight: 700; }
+.panel p { color: var(--muted); font-size: .95rem; }
+pre {
+  background: var(--bg);
+  border: 1px solid var(--outline-soft);
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  margin-block: .9rem;
+}
+pre code { background: none; padding: 0; font-size: .85rem; line-height: 1.7; }
+
+/* ---------- roadmap ---------- */
+.legend { display: flex; gap: 1.4rem; flex-wrap: wrap; margin-top: 1.6rem; font-size: .85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: .5rem; }
+.dot { width: .85rem; height: .85rem; border-radius: 999px; flex: none; }
+.dot.ship { background: var(--primary); }
+.dot.plan { border: 2px dashed var(--outline); }
+.roadmap-strip { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.2rem; }
+.rchip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  border-radius: 999px;
+  padding: .55rem 1.15rem;
+  font-weight: 700;
+  font-size: .92rem;
+}
+.rchip svg { width: 1em; height: 1em; flex: none; }
+.rchip.ship { background: var(--primary); color: var(--on-primary); }
+.rchip.plan { border: 2px dashed var(--outline); color: var(--muted); }
+.v2tease {
+  margin-top: 2.2rem;
+  max-width: 46rem;
+  color: var(--muted);
+  font-size: .97rem;
+  border-left: 4px solid var(--amber);
+  padding-left: 1.1rem;
+}
+
+/* ---------- footer ---------- */
+footer { border-top: 1px solid var(--outline-soft); padding-block: 2.6rem; }
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: .92rem;
+}
+.foot .fcol { display: grid; gap: .35rem; }
+.foot a { color: var(--primary); }
+.tiny { font-size: .85rem; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 56rem) {
+  .grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 46rem) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .phone-slot { justify-items: start; }
+  .rungs, .install-cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 30rem) {
+  .grid { grid-template-columns: 1fr; }
+  .btn { width: 100%; justify-content: center; }
+  .cta-row .badge { width: auto; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="wordmark" href="#top" aria-label="tactos — home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect class="glyph-body" x="4" y="3.5" width="16" height="19" rx="4.5"/>
+          <rect class="glyph-clip" x="8" y="1.5" width="8" height="4.5" rx="2.25"/>
+          <rect class="glyph-line" x="7.5" y="10" width="9" height="2" rx="1"/>
+          <rect class="glyph-line" x="7.5" y="14" width="6" height="2" rx="1"/>
+        </svg>
+        tactos
+      </a>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#privacy">Privacy</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
+        <li><a class="gh" href="https://github.com/jackofall1232/tactos" rel="noopener">GitHub</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= hero ================= -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div>
+        <h1 id="hero-title">Fifty tiny apps.<br>One <span class="accent">tactos</span>.</h1>
+        <p class="sub">The privacy-first Android multi-tool built around a smart clipboard —
+        every copied item detected, searchable forever, actionable instantly.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/jackofall1232/tactos/releases/latest" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 3v12m0 0 5-5m-5 5-5-5"/><path d="M4 19h16"/>
+            </svg>
+            Download APK
+          </a>
+          <span class="badge">v0.1.0 coming soon</span>
+        </div>
+        <div class="cta-row">
+          <a class="btn btn-ghost" href="https://github.com/jackofall1232/tactos" rel="noopener">View source on GitHub</a>
+        </div>
+        <p class="caption">First public release in the works — until then,
+        <a href="https://github.com/jackofall1232/tactos" rel="noopener">build from source</a> or grab the
+        <a href="https://github.com/jackofall1232/tactos/actions" rel="noopener">CI debug build</a>.
+        The button above starts working the moment v0.1.0 ships.</p>
+      </div>
+
+      <div class="phone-slot">
+        <div class="phone" role="img" aria-label="Stylized illustration of the tactos clipboard timeline: a search field, type filter chips, and clip cards for a URL, a color, a JSON snippet, and a pinned note.">
+          <div class="screen" aria-hidden="true">
+            <div class="statusbar">
+              <span>10:24</span>
+              <span class="sicons">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-6.4-6.4 2.2 2.2a6 6 0 0 1 8.4 0l2.2-2.2a9 9 0 0 0-12.8 0ZM2 10l2.2 2.2a11 11 0 0 1 15.6 0L22 10a14 14 0 0 0-20 0Z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="16" height="8" rx="2.5"/><path d="M21 11v2" stroke-linecap="round"/><rect x="5" y="10" width="9" height="4" rx="1" fill="currentColor" stroke="none"/></svg>
+              </span>
+            </div>
+            <div class="appbar">
+              <svg viewBox="0 0 24 24">
+                <rect class="glyph-body" x="4" y="3.5" width="16" height="19" rx="4.5"/>
+                <rect class="glyph-clip" x="8" y="1.5" width="8" height="4.5" rx="2.25"/>
+                <rect class="glyph-line" x="7.5" y="10" width="9" height="2" rx="1"/>
+                <rect class="glyph-line" x="7.5" y="14" width="6" height="2" rx="1"/>
+              </svg>
+              tactos
+            </div>
+            <div class="searchfield">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+              Search your clipboard…
+            </div>
+            <div class="chiprow">
+              <span class="chip sel">All</span>
+              <span class="chip">🔗 URL</span>
+              <span class="chip">🎨 Color</span>
+              <span class="chip">🧩 JSON</span>
+            </div>
+            <div class="clip">
+              <div class="meta"><span class="tchip">URL</span><span>just now</span></div>
+              <div class="txt">https://developer.android.com/jetpack/compose</div>
+              <div class="acts">
+                <span class="achip">
+                  <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2V2Zm1.5 1.5v2h2v-2h-2ZM9 2h5v5H9V2Zm1.5 1.5v2h2v-2h-2ZM2 9h5v5H2V9Zm1.5 1.5v2h2v-2h-2ZM9 9h2v2H9V9Zm3 0h2v2h-2V9Zm-3 3h2v2H9v-2Zm3 0h2v2h-2v-2Z"/></svg>
+                  QR
+                </span>
+                <span class="achip">Open</span>
+              </div>
+            </div>
+            <div class="clip">
+              <div class="meta"><span class="tchip">Color</span><span>2 min</span></div>
+              <div class="swatchrow">
+                <span class="swatch"></span>
+                <div>
+                  <div class="txt mono">#00696D</div>
+                  <div class="meta"><span>rgb(0, 105, 109)</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="clip">
+              <div class="meta"><span class="tchip">JSON</span><span>9 min</span></div>
+              <div class="txt mono">{"ads":false,"accounts":0,"offline":true}</div>
+              <div class="acts"><span class="achip">Beautify</span><span class="achip">Validate</span></div>
+            </div>
+            <div class="clip">
+              <div class="meta"><span class="tchip amber">📌 Pinned</span><span>Text</span></div>
+              <div class="txt">Standup moved to 14:30 — room Aurora</div>
+            </div>
+          </div>
+        </div>
+        <p class="phone-note">Stylized illustration — not a screenshot.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= features ================= -->
+  <section id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <span class="overline">Features</span>
+      <h2 id="features-title">A clipboard that actually works for you</h2>
+      <p class="lede">tactos replaces the drawer full of single-purpose utilities with one
+      fast, offline app — and its spine is the smartest clipboard on Android.</p>
+
+      <div class="grid">
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <rect x="5" y="4" width="14" height="17" rx="3"/><path d="M9 4.5v-1A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/>
+            </svg>
+          </div>
+          <h3>Clipboard timeline</h3>
+          <p>Unlimited, searchable history of everything you copy. Pin it, favorite it,
+          file it into categories. Nothing expires unless you say so.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/><path d="M11 8.2 11.8 10 13.6 10.8 11.8 11.6 11 13.4 10.2 11.6 8.4 10.8 10.2 10Z" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <h3>Knows what you copied</h3>
+          <p>Every clip is type-detected on your device: URLs, colors, JSON, email
+          addresses, IPv4 and IPv6, phone numbers, plain text.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+              <path d="M13.2 2 5 13.4h4.6L8.6 22 17 10.6h-4.6L13.2 2Z"/>
+            </svg>
+          </div>
+          <h3>Acts on it</h3>
+          <p>A URL becomes a QR code — generated offline. A color converts
+          HEX⇄RGB⇄HSL. JSON validates, beautifies, minifies. One tap.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 2.5 19 5v6c0 5-3.4 8.6-7 10-3.6-1.4-7-5-7-10V5Z"/><path d="m9 11.8 2.2 2.2L15.4 9.6"/>
+            </svg>
+          </div>
+          <h3>Zero permissions</h3>
+          <p>The APK requests none — not even internet. There is no code path by which
+          your clipboard could leave your phone.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 20.5S4 15.5 4 9.7A4.2 4.2 0 0 1 8.2 5.5c1.6 0 3 .9 3.8 2.2a4.4 4.4 0 0 1 3.8-2.2A4.2 4.2 0 0 1 20 9.7c0 5.8-8 10.8-8 10.8Z"/>
+            </svg>
+          </div>
+          <h3>Yours</h3>
+          <p>No ads. No accounts. No subscriptions. MIT-licensed open source — so it
+          stays that way.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <h3>Material You</h3>
+          <p>Dynamic color on Android 12+, a calm teal-and-amber palette below.
+          Light and dark, always.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= privacy ================= -->
+  <section class="privacy" id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <span class="overline">Privacy</span>
+      <h2 id="privacy-title">Privacy isn't a setting. It's the architecture.</h2>
+      <p class="lede">Your clipboard is the most sensitive stream of text on your phone —
+      passwords, addresses, one-time codes, half-written messages. tactos is built so
+      it physically cannot betray that.</p>
+
+      <ul class="priv-list">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 2.5 19 5v6c0 5-3.4 8.6-7 10-3.6-1.4-7-5-7-10V5Z"/></svg>
+          <div><strong>Zero permissions.</strong>
+          <span>The manifest declares none — including no <code>INTERNET</code>. Android itself guarantees the app can't phone home.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
+          <div><strong>Everything stays on your device.</strong>
+          <span>The timeline lives in a private local database in the app's own storage. No cloud, no sync you didn't build.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4l16 16"/><path d="M9.5 5.2A8.8 8.8 0 0 1 12 4.8c5 0 8.5 3.7 10 7.2a12.6 12.6 0 0 1-3 4.2M6.2 6.9A12.4 12.4 0 0 0 2 12c1.5 3.5 5 7.2 10 7.2 1.3 0 2.5-.2 3.6-.7"/></svg>
+          <div><strong>Sensitive clips are never stored.</strong>
+          <span>When another app marks a clip sensitive — a password manager, a 2FA app — tactos keeps it out of plaintext history.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8.5 8.5 7 7M15.5 8.5l-7 7"/></svg>
+          <div><strong>No analytics. No crash SDKs. No trackers.</strong>
+          <span>Not "minimal telemetry" — none. The dependency list is short, open, and auditable.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 8-4.5 4L9 16M15 8l4.5 4L15 16"/></svg>
+          <div><strong>Open source — verify it yourself.</strong>
+          <span>Don't take this page's word for it: <a href="https://github.com/jackofall1232/tactos/blob/main/app/src/main/AndroidManifest.xml" rel="noopener">read the manifest on GitHub</a>. MIT-licensed, end to end.</span></div>
+        </li>
+      </ul>
+
+      <p class="samerules">This website plays by the same rules: one HTML file, no scripts,
+      no fonts, no cookies, no trackers. Open your browser's network tab — this page is a
+      single request.</p>
+    </div>
+  </section>
+
+  <!-- ================= capture ================= -->
+  <section id="capture" aria-labelledby="capture-title">
+    <div class="wrap">
+      <span class="overline">How capture works</span>
+      <h2 id="capture-title">Honest about the clipboard</h2>
+      <p class="lede">Since Android 10, background apps can't silently read your clipboard —
+      and that's a good thing. tactos works with the platform, not around it, so capture
+      is layered and every rung is optional:</p>
+
+      <div class="rungs">
+        <div class="rung">
+          <span class="num" aria-hidden="true">1</span>
+          <h3>Share to tactos</h3>
+          <p>Send anything from any app's share sheet straight into the timeline.
+          Works everywhere, today, with no special access.</p>
+        </div>
+        <div class="rung">
+          <span class="num" aria-hidden="true">2</span>
+          <h3>Open tactos</h3>
+          <p>Whenever the app comes to the foreground it reads the current clipboard
+          and files it — copy, switch over, done.</p>
+        </div>
+        <div class="rung">
+          <span class="num" aria-hidden="true">3</span>
+          <h3>Add manually</h3>
+          <p>Paste or type anything into the timeline yourself. Notes, snippets,
+          things you want to keep findable.</p>
+        </div>
+        <div class="rung planned">
+          <span class="planned-flag">Planned — not shipped yet</span>
+          <h3>Background auto-capture</h3>
+          <p>An opt-in accessibility service that does nothing but clipboard capture,
+          behind a plain-language disclosure you can decline. tactos stays fully
+          functional without it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= install ================= -->
+  <section class="privacy" id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <span class="overline">Install</span>
+      <h2 id="install-title">Sideload it in a minute</h2>
+      <p class="lede">No store account needed. tactos ships as a plain APK you can
+      install and verify yourself.</p>
+
+      <div class="install-cols">
+        <div class="panel">
+          <h3>Sideload the APK</h3>
+          <ol>
+            <li>On your phone, download the latest APK from the
+            <a href="https://github.com/jackofall1232/tactos/releases/latest" rel="noopener">releases page</a>
+            (v0.1.0 coming soon — CI debug builds available meanwhile).</li>
+            <li>Tap the downloaded file. Android will ask you to allow installs from
+            your browser or files app — allow it (you can revoke this afterwards).</li>
+            <li>Tap <strong>Install</strong>. Done — no account, no setup, no network.</li>
+          </ol>
+        </div>
+        <div class="panel">
+          <h3>Or build from source</h3>
+          <p>One command from a clean clone:</p>
+          <pre><code>git clone https://github.com/jackofall1232/tactos
+cd tactos
+./gradlew assembleDebug</code></pre>
+          <p>The debug APK lands in <code>app/build/outputs/apk/debug/</code>.
+          What you build is exactly what you read.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= roadmap ================= -->
+  <section id="roadmap" aria-labelledby="roadmap-title">
+    <div class="wrap">
+      <span class="overline">Roadmap</span>
+      <h2 id="roadmap-title">One toolbox at a time</h2>
+      <p class="lede">Every toolbox is a module behind the same contract, so the core
+      stays small and the roadmap can grow without bloat.</p>
+
+      <div class="legend" aria-hidden="true">
+        <span><span class="dot ship"></span> Building now</span>
+        <span><span class="dot plan"></span> Planned</span>
+      </div>
+
+      <div class="roadmap-strip">
+        <span class="rchip ship">
+          Clipboard OS (v1) <span class="visually-hidden">— building now</span>
+        </span>
+        <span class="rchip plan">Developer toolbox <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">Everyday utilities <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">Privacy tools <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">Image tools <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">AI — your own keys <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">PDF toolbox <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">Network toolbox <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">Device toolbox <span class="visually-hidden">— planned</span></span>
+        <span class="rchip plan">Plugin SDK <span class="visually-hidden">— planned</span></span>
+      </div>
+
+      <p class="v2tease">Further out: a voice-driven command bar that turns
+      "resize these five images and strip the metadata" into a reviewed,
+      on-device workflow.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="fcol">
+      <span><strong>tactos</strong> — <a href="https://github.com/jackofall1232/tactos/blob/main/LICENSE" rel="noopener">MIT licensed</a> · <a href="https://github.com/jackofall1232/tactos" rel="noopener">source on GitHub</a></span>
+      <span class="tiny">made with care · 2026</span>
+    </div>
+    <div class="fcol">
+      <span>No cookies, no analytics, no tracking —</span>
+      <span class="tiny">on this page or in the app.</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
