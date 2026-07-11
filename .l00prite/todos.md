@@ -3,18 +3,18 @@
 ## Next
 - [ ] Spike: verify AccessibilityService clipboard capture on an emulator (API 29+ and
       34+), record the working mechanism and its limits in `.l00prite/memory.md` before
-      building the full capture feature.
-- [ ] Onboarding first-run gating + real settings persistence — needs DataStore
-      (dependency review gate); the disclosure screen content already exists in-app.
-- [ ] Capture ladder integration: share-to-tactos target, manual add, foreground refresh,
-      accessibility toggle wired to the spiked mechanism.
-- [ ] v1 contextual actions: URL open/share/QR (zxing offline); color preview +
-      HEX⇄RGB⇄HSL/HSV; JSON validate/beautify/minify; universal copy/share/pin.
-- [ ] Settings: retention configuration, sensitive-clip policy; verify
-      `EXTRA_IS_SENSITIVE` handling on an API 33+ image.
-- [ ] Replace CI stubs with real workflows (assembleDebug + test + lint on PR); rewrite
-      `README.md` (what tactos is, sideload install, capture disclosure, privacy
-      posture).
+      building the full capture feature. Then wire the settings toggle to it (the
+      settings row ships as a disabled "planned" placeholder).
+- [ ] HUMAN: enable GitHub Pages (repo Settings → Pages → Source: GitHub Actions) —
+      `pages.yml` fails on main until then; site: https://jackofall1232.github.io/tactos/
+- [ ] HUMAN (DoD): sideload the CI APK on API 26 and API 34+ devices and exercise the
+      full v1 surface (capture rungs, search/pin/favorite/cleanup, contextual actions);
+      record evidence in the ledger. Verify `EXTRA_IS_SENSITIVE` skip against a real
+      password manager on an API 33+ image.
+- [ ] HUMAN: review the capture-disclosure wording (still marked DRAFT in-app — gate).
+- [ ] v0.1.0 release prep: tag from main, signed APK + SHA-256 checksum on GitHub
+      Releases (signing/release scripting = review gate; the website download button
+      already points at releases/latest).
 
 ## Later
 Phase order for the full vision (one toolbox phase at a time; each is its own
@@ -92,6 +92,15 @@ Architecture principles (binding on v1 design so V2 stays reachable — see `mem
       and explain what's wrong; QR from the clipboard URL.
 
 ## Done
+- 2026-07-11 — v1 polish session (PR #2, merged as c5899f7): `core/actions` (color/JSON/QR
+  pure logic), `core/clipboard` (share ingest, focus capture, sensitive skip, non-text
+  clip filtering), v1 contextual actions via ClipAction descriptors + executor registry
+  (URL open/QR w/ https normalization, color conversions, JSON tools), DataStore settings
+  + retention config (enforced at launch and after every save), first-run onboarding with
+  disclosure (capture opt-in, default OFF), share target + focus capture in MainActivity,
+  adaptive launcher icon, README rewrite, docs/overview.md, zero-external-request website
+  + Pages workflow. CI green at merge (runs 27/28); 12-agent adversarial review (8 findings
+  fixed) + two bot reviews dispositioned (see reviews/github/pr2-bot-reviews-20260711.md).
 - 2026-07-10 — Unit 6: `feature/clipboard` timeline UI (search, type/category chips,
   pinned-first list, favorite toggle, manual add via ContentDetector, detail sheet with
   copy/share/pin/favorite/delete + category editor); ClipboardToolbox = first contract

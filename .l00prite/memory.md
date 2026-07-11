@@ -23,7 +23,24 @@ Durable project facts and decisions that future agents should preserve.
   descriptors later become the model-invocable tool registry, with per-action
   risk levels (low-risk auto-runnable vs. always-confirm destructive/privacy-sensitive).
 
+- **Declarative-actions deviation (v1, intentional):** favorite, delete, and set-category
+  remain plain UI callbacks — CLAUDE.md Section 3 scopes the universal ClipActions to
+  copy/share/pin. They MUST gain descriptors before the V2 intent registry consumes the
+  seam. The nine v1 action ids (clipboard.{copy,share,pin,url.open,url.qr,color.convert,
+  json.validate,json.beautify,json.minify}) are stable API, enforced by ClipboardToolboxTest.
+- Sensitive clips are skip-always (never stored, no masked variant) — decided for v1;
+  capture-on-focus defaults OFF everywhere (onboarding toggle + stored default) because
+  every capture rung is opt-in.
+- Retention is enforced at launch, on settings change, and after every save (capture store
+  wrapper + ClipboardScreen afterSave hook); WorkManager deliberately not added (gate).
+- The website has one hard rule: zero external requests (no CDN/fonts/JS/analytics) —
+  it is the privacy posture made visible; enforced in website/README.md.
+
 ## Facts
+- `ClipDescription.get/setExtras` are **API 24+** (verified against android-7.0.0_r1
+  framework source). Only the `EXTRA_IS_SENSITIVE` constant is API 33; SensitiveClips
+  uses the literal key. Sensitive-clip tests run Robolectric `sdk = [26, 34]` to keep
+  this machine-checked (a bot reviewer got this wrong on PR #2).
 - The Claude remote sandbox used for this repo cannot reach dl.google.com /
   maven.google.com (network policy, CONNECT 403) — including common mirrors and
   github.com/gradle/gradle-distributions. Maven Central, Gradle Plugin Portal, and
@@ -39,3 +56,9 @@ Durable project facts and decisions that future agents should preserve.
 
 ## Avoid
 - Do not store random temporary notes, speculative ideas, or stale debugging output here.
+- **Kotlin block comments NEST.** A literal like `text/*` inside a KDoc opens a nested
+  comment and swallows the rest of the file (cost CI run #19). Never write `/*` inside
+  comments; reword globs.
+- Robolectric: `ClipData.newUri` queries the ContentResolver and throws for unregistered
+  authorities — construct `ClipData(ClipDescription(...), ClipData.Item(uri))` directly
+  in tests (cost CI run #25).
