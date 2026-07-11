@@ -30,6 +30,8 @@ kotlin {
 
 dependencies {
     implementation(project(":core:model"))
+    // api: ActionEffect exposes core/actions types (ColorValue) in its public surface.
+    api(project(":core:actions"))
     implementation(project(":core:database"))
     implementation(project(":core:design"))
     implementation(project(":core:detect"))

@@ -216,6 +216,18 @@ fun ClipboardScreen(
                     refresh++
                 }
             },
+            onSaveAsClip = { text ->
+                scope.launch {
+                    repository.save(
+                        ClipItem(
+                            text = text,
+                            type = ContentDetector.detect(text),
+                            createdAt = System.currentTimeMillis(),
+                        ),
+                    )
+                    refresh++
+                }
+            },
             onDelete = {
                 scope.launch {
                     repository.delete(item.id)
