@@ -96,6 +96,15 @@ class ClipActionExecutorsTest {
         assertEquals(ActionEffect.ShowQr("https://tactos.dev"), effect)
     }
 
+    @Test
+    fun `url qr normalizes scheme-less urls like open does`() {
+        val effect = effectOf(
+            ClipboardToolbox.ACTION_URL_QR,
+            clip("www.example.com", ClipType.URL),
+        )
+        assertEquals(ActionEffect.ShowQr("https://www.example.com"), effect)
+    }
+
     // --- color actions ---
 
     @Test

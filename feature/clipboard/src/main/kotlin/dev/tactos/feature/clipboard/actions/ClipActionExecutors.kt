@@ -19,6 +19,20 @@ object ClipActionExecutors {
     /** Mirrors UrlDetector's scheme list in core/detect. */
     private val WEB_SCHEMES = listOf("http://", "https://", "ftp://", "ftps://")
 
+    /**
+     * UrlDetector accepts scheme-less "www." URLs, but neither ACTION_VIEW
+     * nor QR scanners treat a scheme-less payload as a link — default to
+     * https for both.
+     */
+    private fun normalizeWebUrl(text: String): String {
+        val trimmed = text.trim()
+        return if (WEB_SCHEMES.any { trimmed.startsWith(it, ignoreCase = true) }) {
+            trimmed
+        } else {
+            "https://$trimmed"
+        }
+    }
+
     fun forId(actionId: String): ClipActionExecutor? = executors[actionId]
 
     private val executors: Map<String, ClipActionExecutor> = mapOf(
@@ -26,17 +40,11 @@ object ClipActionExecutors {
         ClipboardToolbox.ACTION_SHARE to { item -> ActionEffect.ShareText(item.text) },
         ClipboardToolbox.ACTION_PIN to { _ -> ActionEffect.TogglePin },
         ClipboardToolbox.ACTION_URL_OPEN to { item ->
-            // UrlDetector accepts scheme-less "www." URLs, but ACTION_VIEW
-            // resolves nothing without a scheme — default to https.
-            val text = item.text.trim()
-            val url = if (WEB_SCHEMES.any { text.startsWith(it, ignoreCase = true) }) {
-                text
-            } else {
-                "https://$text"
-            }
-            ActionEffect.OpenUrl(url)
+            ActionEffect.OpenUrl(normalizeWebUrl(item.text))
         },
-        ClipboardToolbox.ACTION_URL_QR to { item -> ActionEffect.ShowQr(item.text.trim()) },
+        ClipboardToolbox.ACTION_URL_QR to { item ->
+            ActionEffect.ShowQr(normalizeWebUrl(item.text))
+        },
         ClipboardToolbox.ACTION_COLOR_CONVERT to { item ->
             val color = ColorValue.parse(item.text)
             if (color != null) {

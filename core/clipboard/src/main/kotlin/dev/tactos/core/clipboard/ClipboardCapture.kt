@@ -41,12 +41,23 @@ class ClipboardCapture(private val store: suspend (ClipItem) -> Long) {
         val clip = manager.primaryClip ?: return Result.NothingToCapture
         if (SensitiveClips.isSensitive(clip.description)) return Result.SkippedSensitive
         if (clip.itemCount == 0) return Result.NothingToCapture
+        val item = clip.getItemAt(0)
+        // Intent-backed clips (app shortcuts etc.) are never text.
+        if (item.intent != null && item.text == null) return Result.NothingToCapture
         // coerceToText can resolve content URIs (provider/disk I/O) — keep
         // it off the main thread.
         val text = withContext(Dispatchers.IO) {
-            clip.getItemAt(0).coerceToText(context)?.toString()?.trim()
+            item.coerceToText(context)?.toString()?.trim()
         }
         if (text.isNullOrEmpty()) return Result.NothingToCapture
+        // For unresolvable URIs (an image or file copy), coerceToText falls
+        // back to uri.toString() — a content:// string is not clipboard text.
+        val uri = item.uri
+        if (item.text == null && uri != null && text == uri.toString().trim() &&
+            uri.scheme?.lowercase() in NON_TEXT_URI_SCHEMES
+        ) {
+            return Result.NothingToCapture
+        }
         return persist(text, sourceHint)
     }
 
@@ -55,6 +66,11 @@ class ClipboardCapture(private val store: suspend (ClipItem) -> Long) {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return Result.NothingToCapture
         return persist(trimmed, sourceHint)
+    }
+
+    private companion object {
+        /** URI schemes whose toString fallback is never user-copied text. */
+        val NON_TEXT_URI_SCHEMES = setOf("content", "file", "android.resource")
     }
 
     private suspend fun persist(text: String, sourceHint: String?): Result {

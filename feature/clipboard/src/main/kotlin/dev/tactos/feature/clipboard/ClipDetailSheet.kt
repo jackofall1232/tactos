@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,6 +46,9 @@ import dev.tactos.feature.clipboard.actions.ClipActionExecutors
 import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Full clip detail: selectable text, type + timestamps, category editor, and
@@ -64,6 +68,7 @@ fun ClipDetailSheet(
     onDelete: () -> Unit,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var categoryDraft by rememberSaveable(item.id) { mutableStateOf(item.category.orEmpty()) }
     val timeFormat = remember { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT) }
     var dialogEffect by remember(item.id) { mutableStateOf<ActionEffect?>(null) }
@@ -96,7 +101,13 @@ fun ClipDetailSheet(
     }
 
     fun run(actionId: String) {
-        ClipActionExecutors.forId(actionId)?.invoke(item)?.let(::handle)
+        val executor = ClipActionExecutors.forId(actionId) ?: return
+        // Executors are pure but can do real work (parsing large JSON) —
+        // keep them off the main thread; effects apply back on it.
+        scope.launch {
+            val effect = withContext(Dispatchers.Default) { executor(item) }
+            handle(effect)
+        }
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {

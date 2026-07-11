@@ -31,6 +31,7 @@ import dev.tactos.app.settings.SettingsRepository
 import dev.tactos.core.database.TactosDb
 import dev.tactos.feature.clipboard.ClipboardScreen
 import dev.tactos.feature.clipboard.ClipboardToolbox
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -143,6 +144,9 @@ fun TactosApp(
                 ClipboardToolbox.id -> ClipboardScreen(
                     repository = clipRepository,
                     modifier = contentModifier,
+                    afterSave = {
+                        RetentionCleanup.run(clipRepository, settingsRepository.settings.first())
+                    },
                 )
                 else -> ModulePlaceholderScreen(
                     module = registry.byId(s.moduleId),

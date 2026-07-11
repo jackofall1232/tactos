@@ -3,6 +3,8 @@ package dev.tactos.core.clipboard
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.PersistableBundle
 import androidx.test.core.app.ApplicationProvider
 import dev.tactos.core.model.ClipItem
@@ -83,6 +85,29 @@ class ClipboardCaptureTest {
     @Test
     fun `blank clip text captures nothing`() = runTest {
         clipboard.setPrimaryClip(ClipData.newPlainText("t", "   "))
+        val result = capture.captureCurrent(context)
+
+        assertEquals(ClipboardCapture.Result.NothingToCapture, result)
+        assertTrue(stored.isEmpty())
+    }
+
+    @Test
+    fun `uri-only clip that coerces to its own uri string captures nothing`() = runTest {
+        // No provider backs this URI, so coerceToText falls back to
+        // uri.toString() — which must not be stored as a text clip.
+        val uri = Uri.parse("content://media/external/images/media/42")
+        clipboard.setPrimaryClip(ClipData.newUri(context.contentResolver, "image", uri))
+
+        val result = capture.captureCurrent(context)
+
+        assertEquals(ClipboardCapture.Result.NothingToCapture, result)
+        assertTrue(stored.isEmpty())
+    }
+
+    @Test
+    fun `intent-only clip captures nothing`() = runTest {
+        clipboard.setPrimaryClip(ClipData.newIntent("shortcut", Intent(Intent.ACTION_VIEW)))
+
         val result = capture.captureCurrent(context)
 
         assertEquals(ClipboardCapture.Result.NothingToCapture, result)

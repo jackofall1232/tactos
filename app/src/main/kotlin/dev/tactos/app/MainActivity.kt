@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.lifecycleScope
+import dev.tactos.app.settings.RetentionCleanup
 import dev.tactos.app.settings.SettingsRepository
 import dev.tactos.core.clipboard.ClipboardCapture
 import dev.tactos.core.clipboard.ShareIngest
@@ -23,10 +24,19 @@ class MainActivity : ComponentActivity() {
     /** Bumped when a share lands, so the UI jumps to the timeline. */
     private val sharedClipTick = mutableIntStateOf(0)
 
+    /** A share grants us focus too — don't also capture the stale clipboard. */
+    private var suppressNextFocusCapture = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settingsRepository = SettingsRepository(applicationContext)
-        capture = ClipboardCapture(TactosDb.repository(applicationContext)::save)
+        val repository = TactosDb.repository(applicationContext)
+        capture = ClipboardCapture { item ->
+            val id = repository.save(item)
+            // Keep the retention promise honest on every automatic save.
+            RetentionCleanup.run(repository, settingsRepository.settings.first())
+            id
+        }
         // Recreation redelivers the original intent — only ingest it once.
         if (savedInstanceState == null) ingestShare(intent)
         setContent {
@@ -55,6 +65,10 @@ class MainActivity : ComponentActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus) return
+        if (suppressNextFocusCapture) {
+            suppressNextFocusCapture = false
+            return
+        }
         lifecycleScope.launch {
             val settings = settingsRepository.settings.first()
             if (settings.onboardingComplete && settings.captureOnFocus) {
@@ -66,6 +80,7 @@ class MainActivity : ComponentActivity() {
     /** Share-to-tactos rung: persist text arriving via ACTION_SEND. */
     private fun ingestShare(intent: Intent?) {
         val text = ShareIngest.textFrom(intent) ?: return
+        suppressNextFocusCapture = true
         lifecycleScope.launch {
             if (capture.saveText(text, sourceHint = "share") is ClipboardCapture.Result.Saved) {
                 Toast.makeText(this@MainActivity, "Saved to tactos", Toast.LENGTH_SHORT).show()
