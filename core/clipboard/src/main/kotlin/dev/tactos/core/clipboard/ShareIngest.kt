@@ -10,8 +10,9 @@ import android.content.Intent
 object ShareIngest {
 
     /**
-     * Returns the shared text, trimmed, or null when [intent] is not a
-     * non-blank `text/*` [Intent.ACTION_SEND] share.
+     * Returns the shared text, trimmed, or null when [intent] is not an
+     * [Intent.ACTION_SEND] share carrying non-blank text (any `text`
+     * MIME subtype).
      */
     fun textFrom(intent: Intent?): String? {
         if (intent?.action != Intent.ACTION_SEND) return null
