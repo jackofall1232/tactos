@@ -35,6 +35,12 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 kotlin {
@@ -56,4 +62,14 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.kotlinx.coroutines.test)
+    // core:database depends on Room as `implementation`, so it isn't exposed
+    // transitively; RetentionCleanupTest needs Room.inMemoryDatabaseBuilder
+    // directly (same in-memory-db pattern as ClipRepositoryTest).
+    testImplementation(libs.room.runtime)
 }
