@@ -3,9 +3,9 @@
   "project_name": "tactos",
   "current_goal": "v1: Clipboard OS core + module shell (CLAUDE.md Section 3)",
   "current_phase": "v1-implementation",
-  "active_agent": null,
+  "active_agent": "claude (bigrun: memory reconciliation + v1 polish units)",
   "last_agent": "claude (supervised build loop, units 1-6 + V2 recording)",
-  "last_updated": "2026-07-10T23:17:27Z",
+  "last_updated": "2026-07-14T03:29:44Z",
   "status": "in_progress",
   "blocked": false,
   "blocker_reason": null,
@@ -16,5 +16,5 @@
   "ci_status": "passing",
   "execution_active": false,
   "execution_stop_reason": null,
-  "next_recommended_action": "next unit: capture ladder (share-to-tactos + foreground refresh; manifest changes are review-gated; a11y spike still needs a device) or v1 contextual actions (zxing-core = dependency review gate); sideload the run-#10 APK to exercise the timeline by hand"
+  "next_recommended_action": "Memory reconciled 2026-07-14: PR #2 already shipped rungs 2-3, all v1 contextual actions, settings/retention, CI/README (see todos.md Done + memory.md facts). Remaining real work: (1) maintainer runs the accessibility-service spike on a real device per docs/spikes/accessibility-capture-spike.md, then a manifest-gated wiring unit follows; (2) maintainer runs the device-verification checklist (docs/device-verification.md) before v1 DoD can be declared; (3) maintainer signs off on docs/disclosure-review.md wording. No further autonomous units are available until one of those human steps happens."
 }

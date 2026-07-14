@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "lock_id": "lock-20260710T233323Z-claude-pr1-review",
-  "owner_agent": null,
-  "owner_session": null,
-  "acquired_at": "2026-07-10T23:33:23Z",
-  "expires_at": "2026-07-11T00:33:23Z",
-  "ttl_seconds": 3600,
-  "purpose": null,
+  "lock_id": "lock-20260714T032944Z-claude-bigrun-polish",
+  "owner_agent": "claude",
+  "owner_session": "todos-overview-syys9f-bigrun",
+  "acquired_at": "2026-07-14T03:29:44Z",
+  "expires_at": "2026-07-14T05:29:44Z",
+  "ttl_seconds": 7200,
+  "purpose": "Big run: reconcile stale l00prite memory (state rot vs merged PR #2) + v1 polish units (ADR-0003, app/core-design test coverage, disclosure-copy review, device-verification checklist, a11y spike-kit doc) per Fable's advisory plan, owner-approved scope",
   "protected_paths": [
     "ledger.md",
     "memory.md",
@@ -18,5 +18,5 @@
     "reviews/",
     "sessions/"
   ],
-  "status": "released"
+  "status": "active"
 }
