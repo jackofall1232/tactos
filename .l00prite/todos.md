@@ -1,20 +1,39 @@
 # Prioritized TODOs
 
 ## Next
-- [ ] Spike: verify AccessibilityService clipboard capture on an emulator (API 29+ and
-      34+), record the working mechanism and its limits in `.l00prite/memory.md` before
-      building the full capture feature.
-- [ ] Onboarding first-run gating + real settings persistence — needs DataStore
-      (dependency review gate); the disclosure screen content already exists in-app.
-- [ ] Capture ladder integration: share-to-tactos target, manual add, foreground refresh,
-      accessibility toggle wired to the spiked mechanism.
-- [ ] v1 contextual actions: URL open/share/QR (zxing offline); color preview +
-      HEX⇄RGB⇄HSL/HSV; JSON validate/beautify/minify; universal copy/share/pin.
-- [ ] Settings: retention configuration, sensitive-clip policy; verify
-      `EXTRA_IS_SENSITIVE` handling on an API 33+ image.
-- [ ] Replace CI stubs with real workflows (assembleDebug + test + lint on PR); rewrite
-      `README.md` (what tactos is, sideload install, capture disclosure, privacy
-      posture).
+> **2026-07-14 reconciliation note:** this file, `ledger.md`, `memory.md`, and
+> `state.json` had gone stale — PR #2 (`c5899f7`, merged to `main`) shipped settings
+> persistence, capture-ladder rungs 2–3, all v1 contextual actions, retention/sensitive-clip
+> handling, real CI, and README/website, but the session that did it never updated `.l00prite/`
+> memory. Verified against actual source (not the old ledger, not README prose) before writing
+> this. See the ledger entry dated 2026-07-14 for the full audit trail. Treat this as a
+> concrete instance of the "State Rot" failure mode in `failures.md` — every implementation
+> loop must update memory before stopping, with no exceptions for merged PRs either.
+
+- [ ] Accessibility-service capture (ladder rung 1): still fully unbuilt — verified zero
+      shipped/compiled `AccessibilityService` implementation in any Gradle module's `src/`
+      tree (the only `AccessibilityService` code in the repo is the illustrative, non-shipped
+      snippet inside `docs/spikes/accessibility-capture-spike.md`, which lives outside every
+      module's source set on purpose). CLAUDE.md requires the mechanism be
+      spike-verified on a real device/emulator before the feature is built — this sandbox has
+      no device access, so the spike itself must happen on the maintainer's hardware. A
+      spike protocol + doc-only illustrative code now live in
+      `docs/spikes/accessibility-capture-spike.md` (owner-approved scope: doc/spike-kit only,
+      no manifest or app changes this round). Do not build the real service, wire the
+      manifest `<service>`, or touch the disclosure/settings toggle until the spike is done
+      and its results are recorded here.
+- [ ] Once the spike confirms a working mechanism: wire the accessibility toggle,
+      `AndroidManifest.xml` `<service>` declaration, and finalize disclosure copy — this is
+      a manifest human-review-gate action, never autonomous.
+- [ ] Human device-verification pass (API 26 and API 34+): capture ladder end-to-end,
+      declining-accessibility-still-works, `EXTRA_IS_SENSITIVE` on an API 33+ image. Checklist
+      ready at `docs/device-verification.md` — this cannot be done from this sandbox; it needs
+      the maintainer on real hardware before the v1 Definition of Done can be declared met.
+- [ ] Disclosure copy final sign-off: `DisclosureScreen.kt` is still marked DRAFT
+      in-code by design; a reviewed/refined-wording proposal is at
+      `docs/disclosure-review.md` awaiting maintainer approval (human review gate).
+- [ ] Toolchain bump (AGP/Compose BOM/androidx to current stable) — still queued, unchanged
+      from before; bump behind CI verification as usual.
 
 ## Later
 Phase order for the full vision (one toolbox phase at a time; each is its own
@@ -92,6 +111,24 @@ Architecture principles (binding on v1 design so V2 stays reachable — see `mem
       and explain what's wrong; QR from the clipboard URL.
 
 ## Done
+- 2026-07-11 — PR #2 (`c5899f7`, merged): closed out the rest of v1 Section 3 in one
+  push — `core/clipboard` (ClipboardCapture foreground-refresh + dedup, ShareIngest
+  ACTION_SEND wired to the DB, SensitiveClips EXTRA_IS_SENSITIVE filtering at capture
+  time); `core/actions` (ColorValue HEX⇄RGB⇄HSL/HSV both directions, JsonTools
+  validate/beautify/minify via kotlinx-serialization-json, QrCode wrapping real
+  zxing-core `Encoder`) with adversarial table-driven tests; `SettingsRepository`
+  (DataStore-backed: onboarding-complete, capture-on-focus, retention days/max-items) +
+  `RetentionCleanup` (applied at launch/capture, no WorkManager — see memory.md); real
+  `OnboardingScreen`/`SettingsScreen`; `ClipboardToolbox` executor registry
+  (`ClipActionExecutors` + `ActionEffect` sealed interface, side-effect-free — matches the
+  V2 declarative-actions constraint) wired into `ClipDetailSheet`; zero-permission
+  manifest gained exactly one `ACTION_SEND` intent-filter (share-to-tactos), otherwise
+  unchanged. Also shipped: real CI (assembleDebug+test+lint, unchanged since — already
+  done, not a pending item), accurate README (does not overclaim — correctly says
+  accessibility auto-capture is not in this release), a real self-contained
+  `website/index.html` + GitHub Pages workflow, `docs/overview.md`. 134 `@Test` methods
+  total across modules at time of audit. **This entry backfills what the merging session
+  never recorded — see the 2026-07-14 reconciliation note above and the ledger.**
 - 2026-07-10 — Unit 6: `feature/clipboard` timeline UI (search, type/category chips,
   pinned-first list, favorite toggle, manual add via ContentDetector, detail sheet with
   copy/share/pin/favorite/delete + category editor); ClipboardToolbox = first contract
@@ -120,7 +157,17 @@ Architecture principles (binding on v1 design so V2 stays reachable — see `mem
 ## Notes for the next session
 - This remote sandbox cannot reach Google Maven / dl.google.com (network policy):
   verify JVM modules locally with `--configure-on-demand`; Android targets verify in CI.
-- Room DAO tests will need Robolectric or instrumented tests — new dependency ⇒ human
-  review gate before adding.
+- Robolectric is already an approved, in-catalog dependency (used by `core/database`,
+  `core/clipboard`, `feature/clipboard` tests) — extending it to a module that has no
+  tests yet (e.g. `app/`) is not a new-dependency review gate, just wiring an existing
+  entry into that module's `build.gradle.kts`.
+- zxing-core, kotlinx-serialization-json, and androidx-datastore-preferences are also
+  already in the catalog and in active use (`core/actions`, `app/settings`) — they are
+  not open dependency decisions anymore.
 - Toolchain bump (AGP/Compose BOM/androidx to current stable) queued — bump, let CI
   verify, keep pins in `gradle/libs.versions.toml`.
+- **Read `.l00prite/` memory with healthy skepticism against actual source** at the start
+  of every session — this file went stale for 4 days of real work (see 2026-07-14 note)
+  because a merging session skipped the memory-update step. Cross-check claims like
+  "still needs X dependency" or "not yet wired" against a real grep/read before trusting
+  them, especially after any PR merge.

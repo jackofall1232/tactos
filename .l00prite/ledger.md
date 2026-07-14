@@ -127,3 +127,112 @@ Append one entry per agent run. Do not overwrite prior runs.
 - **Next action:** Awaiting owner's gate decision: capture ladder (manifest gate) and/or contextual actions (zxing-core gate). PR watch + hourly self check-in active until merged/closed.
 - **Do-not-retry notes:** none new.
 - **Lock:** `lock-20260710T233323Z-claude-pr1-review` acquired 23:33Z, released at close-out.
+
+### Run 2026-07-14T03:29:44Z — claude (bigrun: memory reconciliation + v1 polish units)
+- **Goal:** Owner asked for one big push toward "a good working prototype," with Fable
+  consulted as architect/advisor (per CLAUDE.md section 5 model split) and Sonnet doing the
+  bulk implementation. Before planning, audited actual repo state against the CLAUDE.md
+  section 3 checklist because `.l00prite/` memory was suspected stale.
+- **Triggering event:** none (normal roadmap work, owner-directed batch of units).
+- **Reviewer/comment reference:** none (no PR opened this run — owner did not ask for one).
+- **Decision:** Normal work, with a discovered memory-staleness incident folded in.
+  **Critical finding:** `.l00prite/todos.md`/`ledger.md`/`memory.md`/`state.json` had gone
+  stale — PR #2 (`c5899f7`, merged to `main` 2026-07-11) shipped nearly all remaining v1
+  Section 3 scope (settings persistence, capture-ladder rungs 2–3, all contextual actions,
+  retention/sensitive-clip handling, real CI, README/website) but the session that merged it
+  never updated `.l00prite/` memory — a concrete instance of the "State Rot" failure mode
+  already catalogued in `failures.md`. Verified this via `git log`/`git ls-remote`/GitHub PR
+  API (not by trusting the old ledger) before doing anything else, then had an Explore agent
+  audit real source against the CLAUDE.md checklist, then had Fable (model `fable`, `Plan`
+  subagent) produce an advisory plan from the verified facts. Owner approved two gate
+  decisions before bulk work started: (1) accessibility-service scope stays "spike-kit doc
+  only" this run — no manifest, no shipped service code, matching CLAUDE.md's own rule
+  against building the capture mechanism on an unverified assumption, especially since this
+  sandbox has no device/emulator access; (2) `applicationId dev.tactos.app` ratified as final.
+- **Completed work:**
+  1. Memory reconciliation (`.l00prite/todos.md`, `memory.md`, `state.json`) — corrected stale
+     Next-items, backfilled a Done entry for PR #2, added facts about the `ClipActionExecutors`/
+     `ActionEffect` declarative-action pattern, the retention-at-launch decision, and which
+     dependencies are no longer open gates (zxing-core, kotlinx-serialization-json,
+     androidx-datastore-preferences, Robolectric all already approved/in use).
+  2. `docs/adr/0003-application-id.md` — ADR ratifying `dev.tactos.app` as final/immutable,
+     Accepted status, recorded as owner-ratified 2026-07-14.
+  3. `app/build.gradle.kts` + three new Robolectric/JVM test files (`SettingsRepositoryTest`,
+     `RetentionCleanupTest`, `ModulesTest`) — real test coverage for `app/`'s previously-untested
+     DataStore settings, retention wiring, and module-registry wiring, using only already-
+     approved catalog dependencies (Robolectric, Room, coroutines-test, androidx-test-core —
+     no new entries in `libs.versions.toml`). `core/design` was audited and found to be 100%
+     Composable/color-scheme data with nothing non-UI to unit test — recorded as an accepted
+     gap requiring a Compose UI test harness (new-dependency gate), not padded with vacuous
+     tests.
+  4. `docs/disclosure-review.md` — a paragraph-by-paragraph rewrite proposal for the DRAFT
+     clipboard-capture disclosure copy, doc-only; `DisclosureScreen.kt` itself is untouched
+     pending maintainer sign-off (human review gate, per CLAUDE.md section 8).
+  5. `docs/device-verification.md` — a checkbox manual test script (API 26 + 34+) mapping every
+     step to the specific CLAUDE.md section 4 Definition-of-Done bullet it retires; this sandbox
+     cannot run any of it (no device/emulator access).
+  6. `docs/spikes/accessibility-capture-spike.md` — the accessibility-service spike protocol:
+     API levels to test (26/29/33/34+), an illustrative service pattern in a fenced code block
+     only (no real source file, no manifest edit), what to observe, and a results template that
+     feeds `.l00prite/memory.md` once the maintainer runs it on real hardware.
+- **Fix implemented:** none needed — CI green on first attempt for the code-touching unit
+  (app/ tests).
+- **Changed files:** `.l00prite/todos.md`, `.l00prite/memory.md`, `.l00prite/state.json`,
+  `.l00prite/lock.json`; `docs/adr/0003-application-id.md`; `app/build.gradle.kts`,
+  `app/src/test/kotlin/dev/tactos/app/settings/SettingsRepositoryTest.kt`,
+  `app/src/test/kotlin/dev/tactos/app/settings/RetentionCleanupTest.kt`,
+  `app/src/test/kotlin/dev/tactos/app/ModulesTest.kt`; `docs/disclosure-review.md`;
+  `docs/device-verification.md`; `docs/spikes/accessibility-capture-spike.md`. Six commits:
+  `8ec53da` (memory reconciliation), `45a7149` (ADR-0003), `bcb8f2e` (app tests), `9564d08`
+  (disclosure review), `c977cf6` (device checklist), `62f02a5` (a11y spike-kit). Not touched:
+  `AndroidManifest.xml`, any signing/keystore file, `gradle/libs.versions.toml` (no new
+  dependencies), `DisclosureScreen.kt` (proposal only, not applied).
+- **Tests run / Verification:**
+  - command: `gradle :core:model:test :core:detect:test --configure-on-demand` (system Gradle,
+    since the wrapper zip download itself 403'd on the network policy) · exit_code: 0 ·
+    summary: JVM regression unchanged, 0 failures · timestamp: 2026-07-14T03:31Z
+  - command: `gradle :app:testDebugUnitTest --configure-on-demand` (attempted locally by the
+    app-tests subagent) · exit_code: 1 · summary: fails at AGP plugin resolution
+    (`com.android.application` 8.11.1 not found — Google Maven unreachable from this sandbox),
+    before any new test code compiles; a known, expected environment limitation, not a signal
+    on code correctness · timestamp: 2026-07-14T03:38Z
+  - command: manual cross-check of every new-test import/API call (`ClipRepository`,
+    `ClipItem`, `ModuleRegistry`, `ClipboardToolbox` constants) against actual source, done by
+    both the subagent and this orchestrating session independently · summary: all symbols
+    exist with matching signatures · timestamp: 2026-07-14 (audit) and pre-push spot-check,
+    same session
+  - command: GitHub Actions CI run 29304613925 on head `62f02a5`
+    (`https://github.com/jackofall1232/tactos/actions/runs/29304613925`) —
+    `./gradlew assembleDebug`, `test`, `:app:lintDebug` · exit_code/conclusion: success ·
+    summary: full pipeline green including the three new app/ Robolectric test files; this is
+    the authoritative verification for the Android-side changes this sandbox cannot build
+    locally · timestamp: 2026-07-14T03:59:42Z
+- **Response drafted/sent:** Owner summary in-chat at each stage (audit findings, Fable's
+  plan, gate questions, unit completion, CI result). No PR opened (not requested).
+- **Event status:** Not applicable.
+- **Failures:** None this run. The *discovered* prior failure (stale `.l00prite/` memory
+  after PR #2's merge) is recorded above and in `memory.md`/`todos.md`, not re-added to
+  `failures.md` since it's already covered by the generic "State Rot" entry there — this run
+  is the concrete instance and the fix.
+- **Decisions:** (1) Accessibility-service capture stays spike-kit-doc-only until the owner
+  runs the spike on real hardware — no manifest or shipped service code this run, owner-
+  confirmed. (2) `applicationId dev.tactos.app` ratified final via ADR-0003, owner-confirmed.
+  (3) `core/design` gets no fake tests; a Compose UI test harness is deferred as its own
+  future new-dependency decision. (4) Existing catalog entries (Robolectric, Room, zxing-core,
+  kotlinx-serialization-json, androidx-datastore-preferences) are not open dependency
+  decisions anymore — using them in a module that didn't use them before is not a fresh gate.
+- **Confidence:** High — CI-green on the one code-touching unit; all five doc-only units
+  verified by direct read-back and cross-reference against real source, not just self-report.
+- **Next action:** No further autonomous units are available. Three things now require the
+  maintainer specifically: (1) run the accessibility-capture spike on a real device/emulator
+  per `docs/spikes/accessibility-capture-spike.md`, then a manifest-gated wiring unit can
+  follow; (2) run `docs/device-verification.md` on API 26 + 34+ hardware — required before v1
+  Definition of Done can be declared; (3) review/approve or reject `docs/disclosure-review.md`
+  before any of it is applied to `DisclosureScreen.kt`.
+- **Do-not-retry notes:** Do not trust `.l00prite/` ledger/todos claims about "still open"
+  work without cross-checking actual source first, especially after any PR merge — this run's
+  root cause. Do not attempt `:app:testDebugUnitTest` (or any Android-module Gradle task)
+  locally in this sandbox expecting a real pass/fail signal beyond the AGP-resolution stage;
+  CI is authoritative.
+- **Lock:** `lock-20260714T032944Z-claude-bigrun-polish` acquired 03:29:44Z (self, this
+  session), released 06:13:13Z at close-out.
