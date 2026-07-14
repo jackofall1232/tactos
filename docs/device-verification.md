@@ -113,7 +113,14 @@ Notes: ______________________________________________________________
 
 ## 4. Decline path (capture-on-focus left off)
 
-**Maps to:** DoD #3 (declining accessibility/automatic capture leaves everything else working)
+**Maps to:** partially covers DoD #3, not a full sign-off. DoD #3 is specifically about
+declining the **accessibility-service** capture prompt and confirming everything else still
+works — that prompt and service do not exist in this build (see
+`docs/spikes/accessibility-capture-spike.md`), so there is no accessibility-decline flow to
+test yet. This section only exercises the narrower, already-shipped case of leaving
+capture-on-focus off. **Leave the DoD #3 sign-off row itself pending** until the
+accessibility service and its consent prompt exist and that specific decline path has been
+tested — do not copy this section's result into the ledger as DoD #3 evidence.
 
 Steps: on a **separate** fresh install (or after resetting app data), complete onboarding
 leaving capture-on-focus off and never enable it. Exercise, without ever turning it on:
@@ -123,7 +130,8 @@ search, pin, favorite, delete, category filters/assignment, and every contextual
 Expected: every one of those features works fully with capture-on-focus never enabled —
 nothing is gated behind it.
 
-Result — API 26: ☐ Pass ☐ Fail   API 34+: ☐ Pass ☐ Fail
+Result (capture-on-focus-declined only, NOT DoD #3) — API 26: ☐ Pass ☐ Fail   API 34+: ☐ Pass ☐ Fail
+DoD #3 (accessibility-declined) — status: ☐ Pending (service not yet built)
 Notes: ______________________________________________________________
 
 ---
@@ -187,11 +195,16 @@ Notes: ______________________________________________________________
 
 **Maps to:** DoD #5 (Section 3 checkbox: auto-cleanup sparing pinned/favorite items)
 
-Steps:
-1. In Settings, set a low max-items value (e.g. 3) or a short retention-days value (e.g. 0–1
-   day, using a clip you can backdate or simply wait out).
-2. Add more clips than the max-items limit (or age some past the retention window), pinning
-   or favoriting at least one clip that would otherwise be trimmed.
+Note: `0` for either setting means "keep forever" (unlimited) — it does not mean "delete
+everything." Set a **positive** value to actually exercise cleanup.
+
+Steps — add and protect clips *before* lowering the retention limit, so cleanup can't run
+out from under you mid-setup:
+1. With retention still at its defaults (`0`/`0`, unlimited), add several clips, then pin or
+   favorite at least one of them — this is the clip that should survive the trim.
+2. *Now* go to Settings and set a low max-items value (e.g. 3, lower than your current clip
+   count) and/or a short-but-positive retention-days value (e.g. 1 day, using a clip you can
+   backdate, or a value you're prepared to wait out — `0` days does nothing).
 3. Relaunch the app (cleanup runs on next launch per CLAUDE.md Section 2).
 
 Expected: the timeline is trimmed down to the configured limit/window; pinned and favorite

@@ -51,8 +51,11 @@ class ClipboardSpikeAccessibilityService : AccessibilityService() {
         val desc = clip.description
         val sensitive = desc.extras
             ?.getBoolean("android.content.extra.IS_SENSITIVE", false) ?: false
-        Log.d("ClipSpike", "event=${event.eventType} sensitive=$sensitive " +
-            "text=${clip.getItemAt(0)?.text}")
+        val text = clip.getItemAt(0)?.text?.toString().orEmpty()
+        // Never log the actual clipboard contents -- this spike is explicitly meant to be
+        // run against password-manager/2FA sources, and raw text in Logcat can leak real
+        // secrets to device logs. Log only redacted, non-reversible metadata.
+        Log.d("ClipSpike", "event=${event.eventType} sensitive=$sensitive length=${text.length}")
     }
 
     override fun onInterrupt() {}

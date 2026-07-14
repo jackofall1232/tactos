@@ -2,7 +2,6 @@ package dev.tactos.app.settings
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -17,10 +16,15 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Robolectric shares the Application context across test methods in this
- * class, and DataStore persists to a real file under that context — without
- * teardown, settings written by one test leak into the next and make
- * results depend on execution order.
+ * Robolectric shares the Application context (and its cached
+ * `Context.settingsDataStore` delegate instance) across test methods in this
+ * class, so without teardown, settings written by one test leak into the
+ * next and make results depend on execution order. Deleting the backing
+ * file is not enough — the delegate keeps its own in-memory copy keyed to
+ * that Context instance and does not reload from disk just because the
+ * file disappeared underneath it — so teardown resets state through the
+ * repository's own API instead, which is guaranteed to reach whichever
+ * DataStore instance is actually live.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -35,9 +39,11 @@ class SettingsRepositoryTest {
     }
 
     @After
-    fun tearDown() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        File(context.filesDir, "datastore").deleteRecursively()
+    fun tearDown() = runTest {
+        repo.setOnboardingComplete(false)
+        repo.setCaptureOnFocus(false)
+        repo.setRetentionDays(0)
+        repo.setRetentionMaxItems(0)
     }
 
     // --- defaults ---
