@@ -2,8 +2,10 @@ package dev.tactos.app.settings
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,6 +16,12 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * Robolectric shares the Application context across test methods in this
+ * class, and DataStore persists to a real file under that context — without
+ * teardown, settings written by one test leak into the next and make
+ * results depend on execution order.
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class SettingsRepositoryTest {
@@ -24,6 +32,12 @@ class SettingsRepositoryTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         repo = SettingsRepository(context)
+    }
+
+    @After
+    fun tearDown() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        File(context.filesDir, "datastore").deleteRecursively()
     }
 
     // --- defaults ---
