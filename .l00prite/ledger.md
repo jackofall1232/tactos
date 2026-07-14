@@ -157,7 +157,7 @@ Append one entry per agent run. Do not overwrite prior runs.
      androidx-datastore-preferences, Robolectric all already approved/in use).
   2. `docs/adr/0003-application-id.md` — ADR ratifying `dev.tactos.app` as final/immutable,
      Accepted status, recorded as owner-ratified 2026-07-14.
-  3. `app/build.gradle.kts` + three new Robolectric/JVoM test files (`SettingsRepositoryTest`,
+  3. `app/build.gradle.kts` + three new Robolectric/JVM test files (`SettingsRepositoryTest`,
      `RetentionCleanupTest`, `ModulesTest`) — real test coverage for `app/`'s previously-untested
      DataStore settings, retention wiring, and module-registry wiring, using only already-
      approved catalog dependencies (Robolectric, Room, coroutines-test, androidx-test-core —
@@ -199,8 +199,8 @@ Append one entry per agent run. Do not overwrite prior runs.
   - command: manual cross-check of every new-test import/API call (`ClipRepository`,
     `ClipItem`, `ModuleRegistry`, `ClipboardToolbox` constants) against actual source, done by
     both the subagent and this orchestrating session independently · summary: all symbols
-    exist with matching signatures · timestamp: 2026-07-14T04:0X–06:0XZ (audit) and pre-push
-    spot-check
+    exist with matching signatures · timestamp: 2026-07-14 (audit) and pre-push spot-check,
+    same session
   - command: GitHub Actions CI run 29304613925 on head `62f02a5`
     (`https://github.com/jackofall1232/tactos/actions/runs/29304613925`) —
     `./gradlew assembleDebug`, `test`, `:app:lintDebug` · exit_code/conclusion: success ·

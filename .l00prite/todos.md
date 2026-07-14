@@ -10,8 +10,11 @@
 > concrete instance of the "State Rot" failure mode in `failures.md` — every implementation
 > loop must update memory before stopping, with no exceptions for merged PRs either.
 
-- [ ] Accessibility-service capture (ladder rung 1): still fully unbuilt (verified: zero
-      `AccessibilityService` code anywhere in the repo). CLAUDE.md requires the mechanism be
+- [ ] Accessibility-service capture (ladder rung 1): still fully unbuilt — verified zero
+      shipped/compiled `AccessibilityService` implementation in any Gradle module's `src/`
+      tree (the only `AccessibilityService` code in the repo is the illustrative, non-shipped
+      snippet inside `docs/spikes/accessibility-capture-spike.md`, which lives outside every
+      module's source set on purpose). CLAUDE.md requires the mechanism be
       spike-verified on a real device/emulator before the feature is built — this sandbox has
       no device access, so the spike itself must happen on the maintainer's hardware. A
       spike protocol + doc-only illustrative code now live in

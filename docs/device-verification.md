@@ -165,7 +165,7 @@ Steps — either method:
   tactos (with capture-on-focus on) and check the timeline.
 - **Controlled fallback:** if no such app is available, a maintainer can build a minimal
   scratch app that constructs a `ClipData` with
-  `description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) } }`
+  `description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }}`
   before calling `ClipboardManager.setPrimaryClip(...)`, then copy from that. This is a
   throwaway test aid only — do not add it to the tactos repo.
 
