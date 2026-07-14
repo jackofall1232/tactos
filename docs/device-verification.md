@@ -15,11 +15,14 @@ requires — do not edit the `.l00prite/` directory from this checklist itself.
 
 ## Getting the build
 
-Download the debug APK from the **`tactos-debug-apk`** artifact on the most recent green
-run of the [CI workflow](https://github.com/jackofall1232/tactos/actions/workflows/ci.yml)
-(filter to `main`, look for a green check, open the run, grab the artifact from its
-"Artifacts" section). Alternatively build locally with `./gradlew assembleDebug` per the
-[README](../README.md#build-from-source) — APK lands at
+**Verify the exact commit/branch being signed off, not just "the latest green `main`."**
+Download the debug APK from the **`tactos-debug-apk`** artifact on the CI run for the
+specific commit or PR head under review — open that commit's checks on
+[the CI workflow](https://github.com/jackofall1232/tactos/actions/workflows/ci.yml), confirm
+it's green, and grab the artifact from its "Artifacts" section. Testing an artifact from an
+older green `main` run can produce clean-looking evidence for a build that doesn't contain
+the changes actually being verified. Alternatively build locally from that exact commit with
+`./gradlew assembleDebug` per the [README](../README.md#build-from-source) — APK lands at
 `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Run metadata (fill in before starting)
@@ -78,11 +81,13 @@ Notes: ______________________________________________________________
 
 ## 3. Capture ladder
 
-**Maps to:** DoD #2 (each ladder rung must be exercised on-device)
-
-Note: tactos's v1 capture ladder is share-to-tactos + foreground-refresh (capture-on-focus)
-+ manual add. There is deliberately **no** accessibility-service rung in v1 — do not expect
-or test one.
+**Maps to:** DoD #2, partially — this section only exercises the rungs that exist in the
+codebase today (share-to-tactos, foreground-refresh, manual add). CLAUDE.md Section 3 lists
+accessibility-service capture as a required v1 ladder rung, and DoD #2 requires exercising
+*each* ladder rung; passing 3a–3c alone is **not** sufficient to check off DoD #2 or declare
+v1 complete. The accessibility rung is deliberately unbuilt this round (see
+`docs/spikes/accessibility-capture-spike.md`) — do not expect or test one yet, and do not
+treat a clean pass here as full ladder sign-off until it exists and is verified too.
 
 ### 3a. Share-to-tactos
 Steps: from any other app, select some text and use the share sheet, choosing "tactos" as
