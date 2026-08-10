@@ -100,9 +100,14 @@ fun TactosApp(
     val scope = rememberCoroutineScope()
 
     val settingsState by settingsRepository.settings.collectAsState(initial = null)
-    // Hold rendering for the first frames until DataStore emits, so the
-    // onboarding gate doesn't flash for already-onboarded users.
-    val settings = settingsState ?: return
+    // Until DataStore's first emission, paint a themed surface instead of
+    // nothing: no blank frame on cold start, and the onboarding gate still
+    // can't flash for already-onboarded users.
+    val settings = settingsState
+    if (settings == null) {
+        Surface(modifier = Modifier.fillMaxSize()) {}
+        return
+    }
 
     // A share just landed: jump to the timeline (tick 0 = no share yet).
     LaunchedEffect(sharedClipTick) {
