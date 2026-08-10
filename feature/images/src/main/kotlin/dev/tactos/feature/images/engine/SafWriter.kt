@@ -40,6 +40,12 @@ object SafWriter {
         val doc = DocumentsContract.createDocument(
             context.contentResolver, parent, mimeType, displayName,
         ) ?: return null
-        if (write(context, doc, bytes)) doc else null
+        if (write(context, doc, bytes)) {
+            doc
+        } else {
+            // Don't leave an empty/partial document in the user's folder.
+            runCatching { DocumentsContract.deleteDocument(context.contentResolver, doc) }
+            null
+        }
     }.getOrNull()
 }

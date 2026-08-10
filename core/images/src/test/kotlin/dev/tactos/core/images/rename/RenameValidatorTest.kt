@@ -45,6 +45,14 @@ class RenameValidatorTest {
     }
 
     @Test
+    fun `illegal characters smuggled through a date format are caught`() {
+        val errors = RenameValidator.validate("{date:yyyy/MM/dd}-{n}")
+        assertTrue(RenameValidationError.IllegalCharacter('/') in errors, "$errors")
+        // A clean custom format still passes.
+        assertEquals(emptyList(), RenameValidator.validate("{date:yyyy-MM-dd}-{n}"))
+    }
+
+    @Test
     fun `bad date formats are reported`() {
         val errors = RenameValidator.validate("{date:qqqq-invalid}")
         assertTrue(errors.any { it is RenameValidationError.BadDateFormat })

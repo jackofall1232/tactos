@@ -261,14 +261,16 @@ fun ClipboardScreen(
                     repository.delete(deleted.id)
                     refresh++
                     // Undo, not confirm: restore the clip with every field
-                    // intact (a fresh row id — the old one is gone).
+                    // intact (a fresh row id — the old one is gone). restore()
+                    // bypasses dedup so a surviving same-text row can't
+                    // swallow it.
                     val result = snackbarHostState?.showSnackbar(
                         message = "Clip deleted",
                         actionLabel = "Undo",
                         duration = SnackbarDuration.Short,
                     )
                     if (result == SnackbarResult.ActionPerformed) {
-                        repository.save(deleted.copy(id = 0L))
+                        repository.restore(deleted)
                         refresh++
                     }
                 }

@@ -47,12 +47,15 @@ fun ImagesScreen(
     snackbarHostState: SnackbarHostState? = null,
 ) {
     var toolId by rememberSaveable { mutableStateOf<String?>(null) }
-    // Picker grants are per-process; after process death the user re-picks.
-    var picked by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    // Saved as strings so the selection survives rotation. Picker grants are
+    // per-process, so after process death stale uris simply fail to decode
+    // and the user re-picks — never a crash.
+    var pickedStrings by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
+    val picked = remember(pickedStrings) { pickedStrings.map(Uri::parse) }
 
     val pickImages = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(maxItems = MAX_PICK),
-    ) { uris -> if (uris.isNotEmpty()) picked = uris }
+    ) { uris -> if (uris.isNotEmpty()) pickedStrings = uris.map(Uri::toString) }
 
     val tool = toolId?.let { ImagesToolbox.toolById(it) }
     BackHandler(enabled = tool != null) { toolId = null }
@@ -79,7 +82,7 @@ fun ImagesScreen(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                     )
                 },
-                onClearPicked = { picked = emptyList() },
+                onClearPicked = { pickedStrings = emptyList() },
                 snackbarHostState = snackbarHostState,
             )
         }
@@ -99,7 +102,8 @@ private fun ToolList(onOpen: (String) -> Unit) {
         item {
             Text(
                 text = "Everything runs on this device. Originals are never modified — " +
-                    "results are always saved as new files where you choose.",
+                    "results are always saved as new files where you choose. " +
+                    "Very large photos are processed at up to 4096 px on the long side.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 12.dp),

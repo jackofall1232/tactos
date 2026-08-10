@@ -254,7 +254,7 @@ class ClipRepositoryTest {
         repo.delete(id)
         assertNull(repo.byId(id))
 
-        val restoredId = repo.save(captured.copy(id = 0L))
+        val restoredId = repo.restore(captured)
         val restored = repo.byId(restoredId)!!
         assertEquals(captured.text, restored.text)
         assertEquals(captured.type, restored.type)
@@ -263,6 +263,28 @@ class ClipRepositoryTest {
         assertTrue(restored.favorite)
         assertEquals("keep", restored.category)
         assertEquals("test", restored.sourceApp)
+    }
+
+    @Test
+    fun `restore bypasses dedup when a same-text row survives`() = runTest {
+        // Timeline: dup(old), other, dup(newest, pinned). Deleting the OLD
+        // dup and undoing must re-insert it — save() would dedup into the
+        // newest dup and lose the restore entirely.
+        val oldDupId = repo.save(item("dup", createdAt = 1L, category = "keep"))
+        repo.save(item("other", createdAt = 2L))
+        repo.save(item("dup", createdAt = 3L, pinned = true))
+        val captured = repo.byId(oldDupId)!!
+
+        repo.delete(oldDupId)
+        val restoredId = repo.restore(captured)
+
+        assertTrue(restoredId != oldDupId)
+        val restored = repo.byId(restoredId)!!
+        assertEquals("dup", restored.text)
+        assertEquals("keep", restored.category)
+        assertEquals(1L, restored.createdAt)
+        // Three distinct rows again — nothing merged.
+        assertEquals(3, repo.count())
     }
 
     @Test

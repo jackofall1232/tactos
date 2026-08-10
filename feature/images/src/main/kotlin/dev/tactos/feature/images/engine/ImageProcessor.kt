@@ -25,6 +25,10 @@ object ImageProcessor {
     fun process(source: Bitmap, job: ImageJob): Output = when (job) {
         is ImageJob.Resize -> {
             val target = job.spec.resolveTargetSize(source.width, source.height)
+            require(target.width.toLong() * target.height <= MAX_OUTPUT_PIXELS) {
+                "target ${target.width}x${target.height} exceeds the " +
+                    "$MAX_OUTPUT_PIXELS-pixel output budget"
+            }
             val scaled = scale(source, target.width, target.height)
             val quality = if (job.format.supportsQuality) job.quality else 100
             val bytes = ImageEncoders.encodeToBytes(scaled, job.format, quality)
@@ -109,4 +113,7 @@ object ImageProcessor {
 
     private const val SCALE_STEP_DIVISOR = 2
     private const val MIN_DIMENSION = 64
+
+    /** ~24 MP: an ARGB output bitmap under ~100 MB, safe on ordinary heaps. */
+    const val MAX_OUTPUT_PIXELS: Long = 24_000_000L
 }

@@ -109,6 +109,12 @@ internal fun ToolBody(
             ?: ImageFormat.fromMimeType(info?.mimeType)
             ?: ImageFormat.JPEG
 
+    // Lossless EXIF strip is only offered when the real source MIME is one
+    // we can label truthfully — otherwise the re-encode fallback runs, so a
+    // HEIF can never end up in a file called .jpg unconverted.
+    fun losslessAllowed(info: ImageLoading.Info?): Boolean =
+        ImageFormat.fromMimeType(info?.mimeType) != null
+
     val singleSave = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(
             formatFor(infos.values.firstOrNull()).mimeType,
@@ -119,12 +125,22 @@ internal fun ToolBody(
         if (uri == null) return@rememberLauncherForActivityResult
         runJob = scope.launch {
             progress = 0 to 1
-            val bytes = withContext(Dispatchers.Default) {
-                processOne(context, source, activeJob, formatFor(infos[source]))
+            val result = withContext(Dispatchers.Default) {
+                processOne(
+                    context, source, activeJob, formatFor(infos[source]),
+                    allowLossless = losslessAllowed(infos[source]),
+                )
             }
-            val ok = bytes != null && SafWriter.write(context, uri, bytes)
+            val ok = result != null &&
+                withContext(Dispatchers.IO) { SafWriter.write(context, uri, result.bytes) }
             progress = null
-            announce(if (ok) "Saved" else "Couldn't process this image")
+            announce(
+                when {
+                    !ok -> "Couldn't process this image"
+                    !result.fitsTarget -> "Saved — target size not reachable, best effort"
+                    else -> "Saved"
+                },
+            )
         }
     }
 
@@ -136,12 +152,16 @@ internal fun ToolBody(
         runJob = scope.launch {
             val resolver = RenameResolver(nowMillis = System.currentTimeMillis())
             var failures = 0
+            var missedTarget = 0
             progress = 0 to picked.size
             for ((index, source) in picked.withIndex()) {
                 val info = infos[source]
                 val format = formatFor(info)
-                val bytes = withContext(Dispatchers.Default) {
-                    processOne(context, source, activeJob, format)
+                val result = withContext(Dispatchers.Default) {
+                    processOne(
+                        context, source, activeJob, format,
+                        allowLossless = losslessAllowed(info),
+                    )
                 }
                 val name = resolver.resolve(
                     namePattern,
@@ -153,16 +173,25 @@ internal fun ToolBody(
                         height = info?.height,
                     ),
                 ).ifBlank { "image-${index + 1}" }
-                val written = bytes != null && SafWriter.createInTree(
-                    context, treeUri, "$name.${format.extension}", format.mimeType, bytes,
-                ) != null
+                val written = result != null && withContext(Dispatchers.IO) {
+                    SafWriter.createInTree(
+                        context, treeUri, "$name.${format.extension}", format.mimeType, result.bytes,
+                    )
+                } != null
                 if (!written) failures++
+                if (result != null && !result.fitsTarget) missedTarget++
                 progress = (index + 1) to picked.size
             }
             progress = null
             announce(
-                if (failures == 0) "Saved ${picked.size} images"
-                else "Saved ${picked.size - failures} of ${picked.size} — $failures failed",
+                buildString {
+                    if (failures == 0) {
+                        append("Saved ${picked.size} images")
+                    } else {
+                        append("Saved ${picked.size - failures} of ${picked.size} — $failures failed")
+                    }
+                    if (missedTarget > 0) append(" · $missedTarget above target size")
+                },
             )
         }
     }
@@ -273,22 +302,35 @@ internal fun ToolBody(
     }
 }
 
-/** Decode -> process for bitmap jobs; lossless strip (with re-encode fallback) for EXIF. */
+/** One processed image; [fitsTarget] false only for missed byte budgets. */
+internal class ProcessedBytes(val bytes: ByteArray, val fitsTarget: Boolean = true)
+
+/**
+ * Decode -> process for bitmap jobs; lossless strip (with re-encode
+ * fallback) for EXIF. Null on any failure — including a blown pixel budget
+ * or OOM — never an exception escaping into the save coroutine.
+ */
 internal fun processOne(
     context: Context,
     source: Uri,
     job: ImageJob,
     sourceFormat: ImageFormat,
-): ByteArray? = when (job) {
+    allowLossless: Boolean = true,
+): ProcessedBytes? = when (job) {
     is ImageJob.ExifStrip -> {
-        ExifStripper(context).strip(source, job)?.bytes
+        val lossless = if (allowLossless) ExifStripper(context).strip(source, job)?.bytes else null
+        lossless?.let { ProcessedBytes(it) }
             ?: ImageLoading.decode(context, source)?.let { bitmap ->
                 try {
                     // Fallback: re-encoding drops all metadata by construction.
-                    ImageProcessor.process(
-                        bitmap,
-                        ImageJob.Convert(sourceFormat, quality = REENCODE_QUALITY),
-                    ).bytes
+                    runCatching {
+                        ProcessedBytes(
+                            ImageProcessor.process(
+                                bitmap,
+                                ImageJob.Convert(sourceFormat, quality = REENCODE_QUALITY),
+                            ).bytes,
+                        )
+                    }.getOrNull()
                 } finally {
                     bitmap.recycle()
                 }
@@ -296,7 +338,10 @@ internal fun processOne(
     }
     else -> ImageLoading.decode(context, source)?.let { bitmap ->
         try {
-            ImageProcessor.process(bitmap, job).bytes
+            runCatching {
+                val output = ImageProcessor.process(bitmap, job)
+                ProcessedBytes(output.bytes, output.fitsTarget)
+            }.getOrNull()
         } finally {
             bitmap.recycle()
         }

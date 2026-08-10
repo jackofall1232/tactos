@@ -51,9 +51,15 @@ object RenameValidator {
             }
         }
 
-        val literal = RenamePattern.TOKEN.replace(pattern, "")
+        // Check what the pattern actually resolves to, not just its literal
+        // text — a {date:yyyy/MM/dd} format smuggles '/' into the file name.
+        val probe = RenameResolver(
+            nowMillis = PROBE_MILLIS,
+            zoneId = java.time.ZoneOffset.UTC,
+            random = kotlin.random.Random(0),
+        ).resolve(pattern, RenameInput(originalName = "sample", index = 0, width = 100, height = 100))
         for (char in RenamePattern.ILLEGAL_CHARS) {
-            if (char in literal) errors += RenameValidationError.IllegalCharacter(char)
+            if (char in probe) errors += RenameValidationError.IllegalCharacter(char)
         }
 
         if (batchSize > 1) {
@@ -64,4 +70,8 @@ object RenameValidator {
 
         return errors
     }
+
+    // Fixed probe instant (2026-01-15T12:30:45Z): every date field is
+    // two-or-more digits, so format separators surface in the probe output.
+    private const val PROBE_MILLIS = 1_768_480_245_000L
 }

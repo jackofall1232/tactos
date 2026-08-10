@@ -2,6 +2,8 @@ package dev.tactos.feature.images.ui
 
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.FilterChip
@@ -97,7 +99,8 @@ internal fun ResizeTool(
         outputFormat = format,
     ) { firstImage ->
         Text("Mode", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        @OptIn(ExperimentalLayoutApi::class)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (candidate in ResizeMode.entries) {
                 FilterChip(
                     selected = mode == candidate.name,
@@ -140,14 +143,21 @@ internal fun ResizeTool(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        // Live preview from the first picked image's real dimensions.
+        // Live preview from the first picked image's real dimensions, with
+        // the same pixel budget the engine enforces surfaced up front.
         if (spec != null && firstImage != null) {
             val target = spec.resolveTargetSize(firstImage.width, firstImage.height)
+            val overBudget =
+                target.width.toLong() * target.height > dev.tactos.feature.images.engine.ImageProcessor.MAX_OUTPUT_PIXELS
             Text(
-                text = "${firstImage.width}×${firstImage.height} → ${target.width}×${target.height}" +
-                    if (picked.size > 1) " (first image)" else "",
+                text = if (overBudget) {
+                    "${target.width}×${target.height} is too large — keep the output under 24 MP"
+                } else {
+                    "${firstImage.width}×${firstImage.height} → ${target.width}×${target.height}" +
+                        if (picked.size > 1) " (first image)" else ""
+                },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = if (overBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
             )
         }
         Text("Output format", style = MaterialTheme.typography.titleSmall)
@@ -254,7 +264,8 @@ internal fun ExifTool(
         outputFormat = null,
     ) { _ ->
         Text("What to remove", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        @OptIn(ExperimentalLayoutApi::class)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for ((candidate, label) in presetLabels) {
                 FilterChip(
                     selected = preset == candidate,
@@ -266,7 +277,9 @@ internal fun ExifTool(
         Text(
             text = when (preset) {
                 ExifRemovalPreset.AllMetadata ->
-                    "Every removable tag is cleared."
+                    "Every EXIF tag this app can edit is cleared. To drop every " +
+                        "trace of metadata (including non-EXIF containers), use " +
+                        "Convert — a re-encode keeps nothing."
                 ExifRemovalPreset.Privacy ->
                     "Location, dates, device identity, and authorship — " +
                         "${preset.tags.size} tags."

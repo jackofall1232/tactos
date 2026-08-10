@@ -30,13 +30,17 @@ class ExifStripper(private val context: Context) {
     fun strip(uri: Uri, job: ImageJob.ExifStrip): Result? {
         val temp = File.createTempFile("exif-strip", null, context.cacheDir)
         try {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                temp.outputStream().use { output -> input.copyTo(output) }
-            } ?: return null
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    temp.outputStream().use { output -> input.copyTo(output) }
+                }
+            }.getOrNull() ?: return null
 
             val tags = tagsFor(job)
-            val exif = ExifInterface(temp)
-            val present = tags.filter { exif.getAttribute(it.key) != null }
+            // ExifInterface throws on containers it can't parse (GIF, BMP...);
+            // null routes the caller to the re-encode fallback.
+            val exif = runCatching { ExifInterface(temp) }.getOrElse { return null }
+            val present = tags.filter { runCatching { exif.getAttribute(it.key) }.getOrNull() != null }
             if (present.isNotEmpty()) {
                 present.forEach { exif.setAttribute(it.key, null) }
                 val saved = runCatching { exif.saveAttributes() }.isSuccess

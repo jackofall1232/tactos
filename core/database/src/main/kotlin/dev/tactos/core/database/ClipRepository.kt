@@ -17,6 +17,14 @@ class ClipRepository(private val dao: ClipDao) {
     /** Persist a capture, collapsing consecutive duplicates. Returns the row id. */
     suspend fun save(item: ClipItem): Long = dao.upsertDedup(item.toEntity())
 
+    /**
+     * Re-insert a previously deleted clip exactly as it was (fresh row id),
+     * bypassing dedup — the undo path. Dedup would otherwise merge the
+     * restore into a surviving row with the same text and silently drop the
+     * deleted clip's pin/favorite/category/timestamps.
+     */
+    suspend fun restore(item: ClipItem): Long = dao.insert(item.copy(id = 0L).toEntity())
+
     /** Case-insensitive (Unicode-aware) substring search; blank query = empty result. */
     suspend fun search(query: String): List<ClipItem> {
         val trimmed = query.trim()

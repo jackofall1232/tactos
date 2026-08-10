@@ -3,8 +3,10 @@ package dev.tactos.feature.images.engine
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.exifinterface.media.ExifInterface
 
 /**
  * Decodes user-picked documents. BitmapFactory (not ImageDecoder) keeps one
@@ -65,11 +67,48 @@ object ImageLoading {
             sample *= 2
         }
         val options = BitmapFactory.Options().apply { inSampleSize = sample }
-        return runCatching {
+        val decoded = runCatching {
             context.contentResolver.openInputStream(uri)?.use { stream ->
                 BitmapFactory.decodeStream(stream, null, options)
             }
-        }.getOrNull()
+        }.getOrNull() ?: return null
+        // Camera JPEGs often store pixels unrotated with orientation in EXIF;
+        // re-encoding without applying it would save a sideways image.
+        return applyOrientation(decoded, orientationOf(context, uri))
+    }
+
+    private fun orientationOf(context: Context, uri: Uri): Int = runCatching {
+        context.contentResolver.openInputStream(uri)?.use { stream ->
+            ExifInterface(stream).getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL,
+            )
+        }
+    }.getOrNull() ?: ExifInterface.ORIENTATION_NORMAL
+
+    private fun applyOrientation(bitmap: Bitmap, orientation: Int): Bitmap {
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+            ExifInterface.ORIENTATION_TRANSPOSE -> {
+                matrix.postRotate(90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_TRANSVERSE -> {
+                matrix.postRotate(270f)
+                matrix.postScale(-1f, 1f)
+            }
+            else -> return bitmap
+        }
+        val oriented = runCatching {
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        }.getOrNull() ?: return bitmap
+        if (oriented !== bitmap) bitmap.recycle()
+        return oriented
     }
 
     /** Base name (no extension) for rename patterns; empty when unknown. */
