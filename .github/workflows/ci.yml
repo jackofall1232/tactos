@@ -5,6 +5,12 @@ on:
     branches: ["main", "claude/**"]
   pull_request:
 
+# One live run per branch: a push and its pull_request event share a group
+# (so they don't both run), and a newer push cancels the superseded run.
+concurrency:
+  group: ci-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,16 +21,15 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: gradle
 
-      - name: Build debug APK
-        run: ./gradlew --no-daemon assembleDebug
+      # Wrapper + dependency + build-cache persistence across runs.
+      - uses: gradle/actions/setup-gradle@v4
 
-      - name: Unit tests
-        run: ./gradlew --no-daemon test
-
-      - name: Android lint
-        run: ./gradlew --no-daemon :app:lintDebug
+      # Single invocation: one configuration pass for assemble + tests + lint.
+      # Release-variant unit tests are excluded — they duplicate the debug
+      # tests with zero extra signal.
+      - name: Build, test, lint
+        run: ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
