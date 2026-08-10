@@ -75,7 +75,13 @@ fun ClipboardScreen(
     val shown = base.applyFilter(TimelineFilter(typeFilter, categoryFilter))
     val categories = timeline.distinctCategories()
     val typesPresent = timeline.distinctTypes()
-    val detailItem = detailId?.let { id -> timeline.firstOrNull { it.id == id } }
+    // Resolved from the database, not the limit-capped timeline list, so a
+    // search hit older than the cap still opens; re-keyed on refresh/timeline
+    // so the open sheet reflects pin/favorite/category mutations.
+    var detailItem by remember { mutableStateOf<ClipItem?>(null) }
+    LaunchedEffect(detailId, refresh, timeline) {
+        detailItem = detailId?.let { repository.byId(it) }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {

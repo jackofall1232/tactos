@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import dev.tactos.core.actions.ColorValue
 import dev.tactos.core.model.ClipItem
 import dev.tactos.feature.clipboard.actions.ActionEffect
@@ -84,8 +84,8 @@ fun ClipDetailSheet(
                 context.startActivity(Intent.createChooser(send, "Share clip"))
             }
             is ActionEffect.OpenUrl -> try {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(effect.url)))
-            } catch (e: ActivityNotFoundException) {
+                context.startActivity(Intent(Intent.ACTION_VIEW, effect.url.toUri()))
+            } catch (_: ActivityNotFoundException) {
                 dialogEffect = ActionEffect.ShowTextResult(
                     title = "Open link",
                     body = "No app on this device can open the link.",

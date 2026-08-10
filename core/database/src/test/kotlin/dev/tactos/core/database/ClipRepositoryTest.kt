@@ -232,4 +232,16 @@ class ClipRepositoryTest {
         assertEquals(2, deleted)
         assertEquals(listOf("fav"), repo.timeline().first().map { it.text })
     }
+
+    @Test
+    fun `byId resolves rows older than the timeline cap`() = runTest {
+        // The oldest row falls outside a cap-sized timeline window but must
+        // still resolve by id — search results reach the full history.
+        val oldestId = repo.save(item("oldest", createdAt = 1L))
+        repeat(3) { i -> repo.save(item("newer-$i", createdAt = 100L + i)) }
+
+        val windowed = repo.timeline(limit = 3).first()
+        assertTrue(windowed.none { it.id == oldestId })
+        assertEquals("oldest", repo.byId(oldestId)?.text)
+    }
 }
