@@ -42,9 +42,17 @@ Dependencies point strictly downward; `core/model` is the only module everything
                     └─────────────────────────────────────────┘
 ```
 
-Pure-JVM modules (`core/model`, `core/detect`, `core/actions`) have no Android dependency
-at all. `core/database`, `core/clipboard`, `core/design`, and `feature/clipboard` are
-Android libraries; `app/` is the only application module. Platform side-effects are bound
+Pure-JVM modules (`core/model`, `core/detect`, `core/actions`, `core/images`) have no
+Android dependency at all. `core/database`, `core/clipboard`, `core/design`,
+`feature/clipboard`, and `feature/images` are Android libraries; `app/` is the only
+application module.
+
+The image toolbox follows the same split (not drawn above to keep the diagram readable):
+`core/images` is pure JVM — formats, resize math, target-size search, EXIF removal
+presets (adapted from ImageToolbox, see `docs/adr/0004-imagetoolbox-ports.md`), and the
+rename-pattern engine — while `feature/images` holds the Android engine
+(decode/encode/EXIF-strip/SAF writes) and the Compose tool screens, and registers
+`ImagesToolbox` through the same `ModuleRegistry` seam as the clipboard. Platform side-effects are bound
 in the UI layers that own them: the clipboard-toolbox executors return pure `ActionEffect`
 values that `feature/clipboard`'s detail sheet interprets (clipboard writes, share intents,
 browser launches), while `app/` binds capture, settings, and navigation.

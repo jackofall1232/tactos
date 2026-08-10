@@ -42,3 +42,14 @@ jobs:
           name: room-schemas
           path: core/database/schemas/
           if-no-files-found: error
+
+      # Also print the schema JSON to the log (delimited) so environments
+      # that can reach the Actions API but not the artifact blob store can
+      # still reconstruct and commit the schema baseline.
+      - name: Print Room schemas
+        run: |
+          for f in $(find core/database/schemas -name '*.json' | sort); do
+            echo "=== BEGIN SCHEMA $f ==="
+            cat "$f"
+            echo "=== END SCHEMA $f ==="
+          done

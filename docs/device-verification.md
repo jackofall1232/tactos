@@ -235,6 +235,43 @@ Notes: ______________________________________________________________
 
 ---
 
+## 9. Completion-plan additions (2026-08): UX polish + Images toolbox
+
+Steps (run on both API levels unless marked):
+1. **Edge-to-edge:** with gesture navigation on API 34+, confirm no screen draws content
+   under the status/navigation bars: first-run onboarding, home, timeline (scroll to the
+   last clip — it must clear the FAB and gesture bar), settings, disclosure.
+2. **System back:** from Settings → back returns Home; from the disclosure → back returns
+   Settings; from a toolbox → back returns Home; inside the Images toolbox with a tool
+   open → back returns the tool list first; on Home → back leaves the app (predictive
+   back animation on API 34+).
+3. **Rotation:** rotate on Settings and inside an Images tool — the screen and tool must
+   be preserved (not reset to Home).
+4. **Cold start:** kill the app, reopen — no white/blank frame before content.
+5. **Delete undo:** delete a clip from the detail sheet — snackbar appears; Undo restores
+   the clip with pin/favorite/category intact.
+6. **Images — picking:** the system photo picker appears (API 33+) or a documents picker
+   (API 26); multi-select works; thumbnails, names, and dimensions show.
+7. **Images — convert:** convert a photo to WebP and to PNG; single save prompts for a
+   location; the saved file opens in a gallery app.
+8. **Images — resize:** Fit 1080 on a larger photo — live preview shows the target size
+   and the saved file has those dimensions (check via the file's properties).
+9. **Images — compress to size:** set a target below the original size — the result is at
+   or under the target (check the saved file's size).
+10. **Images — remove metadata:** on a photo with GPS EXIF (take one with location on),
+    run the Privacy preset and confirm with any EXIF viewer that GPS/date/device tags are
+    gone; confirm the original file is unchanged.
+11. **Images — batch:** pick 3+, save all to a folder; pattern `{name}-{n}` names the
+    outputs; an invalid pattern (e.g. `x/y`) blocks saving with an inline error.
+12. **Zero permissions:** re-run the Section 1 permission dump — still empty after the
+    Images toolbox addition.
+
+Result — API 26: ☐ Pass ☐ Fail
+Result — API 34+: ☐ Pass ☐ Fail
+Notes: ______________________________________________________________
+
+---
+
 ## Definition-of-Done cross-reference
 
 Quick summary of which Section 4 bullets this checklist retires evidence for, and which it

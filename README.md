@@ -15,7 +15,8 @@ modular toolboxes will grow over time — but only what actually ships is descri
 
 ## What ships today (v1)
 
-The current release is the **Clipboard OS** core:
+The current release is the **Clipboard OS** core plus the first companion toolbox,
+**Images**:
 
 - **Smart clipboard timeline** — Room-backed history with case-insensitive substring
   search, pin, favorite, delete, and per-item categories. Consecutive duplicates are
@@ -40,7 +41,20 @@ The current release is the **Clipboard OS** core:
 - **Onboarding and settings** — a plain-language capture disclosure on first run; settings
   for the capture toggle and retention.
 - **Material 3 / Material You** — dynamic color on Android 12+, a static teal/amber
-  palette below that, light and dark throughout.
+  palette below that, light and dark throughout, edge-to-edge, with screen transitions
+  and list animations.
+- **Images toolbox** — pick photos with the system photo picker (no storage permission),
+  then, entirely on-device:
+  - **Resize** — fit within bounds, exact size, or percentage, with a live target-size
+    preview.
+  - **Convert** — PNG ⇄ JPEG ⇄ WebP (WebP lossless at quality 100 on Android 11+).
+  - **Compress** — to a quality level or down to a target file size (quality first, then
+    dimensions).
+  - **Remove metadata** — strip EXIF with privacy presets (location, dates, device
+    identity); lossless when the format allows, and the pixels are never touched.
+  - Batch runs name their outputs with rename patterns (`{name}`, `{n}`, `{date}`, …).
+  - Results are always saved as **new** files where you choose (Storage Access
+    Framework) — originals are never modified, and no permission is ever requested.
 
 Minimum Android version: 8.0 (API 26).
 
@@ -137,7 +151,9 @@ Gradle multi-module, Kotlin 2.x, Jetpack Compose. Each future toolbox becomes it
 | `core/database/` | Room schema, DAO, repository: timeline persistence, dedup, search, retention |
 | `core/design/` | Theme (dynamic color + static fallback) and shared Compose components |
 | `core/clipboard/` | Capture: the ladder rungs, sensitive-clip filtering, ingestion into the timeline |
+| `core/images/` | Pure-Kotlin image logic: formats, resize math, target-size search, EXIF presets, rename patterns |
 | `feature/clipboard/` | The v1 toolbox: timeline UI, detail sheet, contextual-action surface |
+| `feature/images/` | The images toolbox: processing engine (decode/encode/EXIF/SAF) and tool screens |
 
 Toolboxes plug in through the `ToolboxModule`/`ClipAction` contracts: a module declares its
 identity and the actions it contributes for each clip type as plain data, and the app layer
@@ -152,10 +168,11 @@ enabled for the repository).
 ## Roadmap
 
 Beyond the v1 Clipboard OS, toolboxes land one phase at a time, each as its own module:
-developer tools and everyday utilities → privacy tools → images → AI (bring-your-own API
-keys — Anthropic, OpenAI, Gemini, xAI, Ollama, OpenRouter) → PDF and on-device OCR →
-network → device toolboxes, then a published plugin SDK and Play Store preparation. The
-detailed, ordered list lives in [`.l00prite/todos.md`](.l00prite/todos.md).
+developer tools and everyday utilities → privacy tools → the rest of the image toolbox
+(crop, watermark, AVIF, PDF-from-images) → AI (bring-your-own API keys — Anthropic,
+OpenAI, Gemini, xAI, Ollama, OpenRouter) → PDF and on-device OCR → network → device
+toolboxes, then a published plugin SDK and Play Store preparation. The detailed, ordered
+list lives in [`.l00prite/todos.md`](.l00prite/todos.md).
 
 The longer-term V2 direction is an **AI workflow engine**: a universal voice/typed command
 bar that turns natural language ("resize these five images to 1080 wide, convert to WebP,
@@ -176,4 +193,7 @@ changes small, verified, and inside the privacy posture.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). A few files in `core/images` are adapted from
+[T8RIN/ImageToolbox](https://github.com/T8RIN/ImageToolbox) and remain under
+Apache-2.0 with their original headers — see [`NOTICE`](NOTICE) and
+[ADR-0004](docs/adr/0004-imagetoolbox-ports.md) for the exact list and policy.
