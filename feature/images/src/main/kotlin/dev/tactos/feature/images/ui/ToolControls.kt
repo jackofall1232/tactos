@@ -23,6 +23,7 @@ import dev.tactos.core.images.ImageJob
 import dev.tactos.core.images.ResizeSpec
 import dev.tactos.core.images.exif.ExifRemovalPreset
 import dev.tactos.feature.images.ImageTool
+import java.util.Locale
 
 // One composable per tool: each owns its saveable control state, builds the
 // declarative ImageJob, and delegates layout/saving to ToolBody.
@@ -37,7 +38,7 @@ internal fun ConvertTool(
 ) {
     var formatName by rememberSaveable { mutableStateOf(ImageFormat.JPEG.name) }
     var quality by rememberSaveable { mutableIntStateOf(90) }
-    val format = ImageFormat.valueOf(formatName)
+    val format = imageFormatOrDefault(formatName)
 
     ToolBody(
         tool = tool,
@@ -71,9 +72,9 @@ internal fun ResizeTool(
     var percentText by rememberSaveable { mutableStateOf("50") }
     var formatName by rememberSaveable { mutableStateOf(ImageFormat.JPEG.name) }
     var quality by rememberSaveable { mutableIntStateOf(90) }
-    val format = ImageFormat.valueOf(formatName)
+    val format = imageFormatOrDefault(formatName)
 
-    val spec: ResizeSpec? = when (ResizeMode.valueOf(mode)) {
+    val spec: ResizeSpec? = when (resizeModeOrDefault(mode)) {
         ResizeMode.FIT -> boundText.toIntOrNull()?.takeIf { it > 0 }
             ?.let { ResizeSpec.Fit(it, it) }
         ResizeMode.EXACT -> {
@@ -105,7 +106,7 @@ internal fun ResizeTool(
                 )
             }
         }
-        when (ResizeMode.valueOf(mode)) {
+        when (resizeModeOrDefault(mode)) {
             ResizeMode.FIT -> OutlinedTextField(
                 value = boundText,
                 onValueChange = { boundText = it.filter(Char::isDigit) },
@@ -169,7 +170,7 @@ internal fun CompressTool(
     var quality by rememberSaveable { mutableIntStateOf(70) }
     var targetKbText by rememberSaveable { mutableStateOf("500") }
     var formatName by rememberSaveable { mutableStateOf(ImageFormat.JPEG.name) }
-    val format = ImageFormat.valueOf(formatName)
+    val format = imageFormatOrDefault(formatName)
 
     val job: ImageJob? = if (byTarget) {
         targetKbText.toLongOrNull()?.takeIf { it > 0 }
@@ -240,7 +241,7 @@ internal fun ExifTool(
     snackbarHostState: SnackbarHostState?,
 ) {
     var presetName by rememberSaveable { mutableStateOf(ExifRemovalPreset.Privacy.name) }
-    val preset = ExifRemovalPreset.valueOf(presetName)
+    val preset = exifPresetOrDefault(presetName)
 
     ToolBody(
         tool = tool,
@@ -331,8 +332,20 @@ private fun QualitySlider(quality: Int, onChange: (Int) -> Unit, format: ImageFo
     )
 }
 
+// Locale pinned so "2.5 MB" never becomes "2,5 MB" on comma-decimal locales.
 internal fun formatBytes(bytes: Long): String = when {
-    bytes >= 1024 * 1024 -> "%.1f MB".format(bytes / (1024.0 * 1024.0))
-    bytes >= 1024 -> "%.0f KB".format(bytes / 1024.0)
+    bytes >= 1024 * 1024 -> "%.1f MB".format(Locale.US, bytes / (1024.0 * 1024.0))
+    bytes >= 1024 -> "%.0f KB".format(Locale.US, bytes / 1024.0)
     else -> "$bytes B"
 }
+
+// Saved control state can carry stale enum names after an app update —
+// fall back to defaults instead of crashing the tool on restore.
+private fun imageFormatOrDefault(name: String): ImageFormat =
+    ImageFormat.entries.firstOrNull { it.name == name } ?: ImageFormat.JPEG
+
+private fun exifPresetOrDefault(name: String): ExifRemovalPreset =
+    ExifRemovalPreset.entries.firstOrNull { it.name == name } ?: ExifRemovalPreset.Privacy
+
+private fun resizeModeOrDefault(name: String): ResizeMode =
+    ResizeMode.entries.firstOrNull { it.name == name } ?: ResizeMode.FIT
