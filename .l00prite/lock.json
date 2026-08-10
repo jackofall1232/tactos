@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "lock_id": "lock-20260714T073424Z-claude-pr3-review-fixes",
-  "owner_agent": null,
-  "owner_session": null,
-  "acquired_at": "2026-07-14T07:34:24Z",
-  "expires_at": "2026-07-14T08:04:24Z",
-  "ttl_seconds": 1800,
-  "purpose": null,
+  "lock_id": "lock-20260810T164409Z-claude-completion-plan",
+  "owner_agent": "claude",
+  "owner_session": "claude/tactos-completion-plan-q1qtmf",
+  "acquired_at": "2026-08-10T16:44:09Z",
+  "expires_at": "2026-08-10T20:44:09Z",
+  "ttl_seconds": 14400,
+  "purpose": "Approved completion plan: v1 polish units + lean image toolbox",
   "protected_paths": [
     "ledger.md",
     "memory.md",
@@ -18,5 +18,5 @@
     "reviews/",
     "sessions/"
   ],
-  "status": "released"
+  "status": "active"
 }
