@@ -236,3 +236,55 @@ Append one entry per agent run. Do not overwrite prior runs.
   CI is authoritative.
 - **Lock:** `lock-20260714T032944Z-claude-bigrun-polish` acquired 03:29:44Z (self, this
   session), released 06:13:13Z at close-out.
+
+### Run 2026-08-10T16:30:00Z — claude (completion plan: v1 polish + lean image toolbox, PR #4)
+- **Goal:** Owner-approved completion plan: (A) finish/polish v1 UX (bug fix, toolchain
+  bump, back handling, edge-to-edge, cold start, motion, delete undo), (B) lean image
+  toolbox pulled forward from Phase 4 using T8RIN/ImageToolbox (Apache-2.0) as a parts
+  bin, (C) docs/memory closeout. Definition from the owner: "working app end to end,
+  including a functional and intuitive modern UI/UX."
+- **Triggering event:** Owner request in-session (plan approved via plan mode); later PR #4
+  review events from gemini-code-assist, Copilot, and Codex bots.
+- **Reviewer/comment reference:** PR https://github.com/jackofall1232/tactos/pull/4; final
+  green CI run 31415157712 (run #63) on head 8174470; earlier failing runs 31410898989
+  (core-ktx 1.19 needs AGP 9), 31411367140 (icons dropped from 2026 BOM), 31413499276
+  (stale ModulesTest), 31413314456 (transient Maven Central 403, recovered by rerun).
+- **Decision:** Normal roadmap work plus valid review findings; one review suggestion
+  declined with rationale (detailItem clearing would flicker the open sheet).
+- **Completed work:** 20+ commits on `claude/tactos-completion-plan-q1qtmf` (c2d09ed..8174470+):
+  search-detail byId fix; toolchain bump (AGP 8.13.2, Kotlin 2.4.10, BOM 2026.06.01,
+  material-icons-core pinned 1.7.8, Room 2.8.4, core-ktx 1.17.0); saveable Screen codec +
+  BackHandler; enableEdgeToEdge + inset-aware onboarding; themed cold-start surface;
+  AnimatedContent transitions + animateItem; delete undo via restore() (dedup-bypassing
+  insert); NOTICE + ADR-0004; :core:images (formats/resize/target-size/ImageJob + EXIF
+  preset port + rename engine, all pure JVM); :feature:images (engine + 4 tool screens,
+  SAF-only zero-permission saves, EXIF orientation honored, 24MP output budget,
+  fitsTarget honesty, IO-dispatched writes); README/overview/website truthfulness; device
+  checklist §9; CI: schema artifact + log print, concurrency dedupe, single invocation,
+  no release-variant tests, setup-gradle caching; Room schema v1 baseline committed from
+  CI log (identityHash 79b0e2c591fc315df4ba9b4c17646b73).
+- **Fix implemented:** All review fixes above; declined detailItem-clearing suggestion
+  (reply r3751813946 explains the flicker regression).
+- **Changed files:** See per-commit messages; manifest untouched (still zero permissions);
+  one new dependency (androidx.exifinterface 1.4.2, plan-approved).
+- **Tests run / Verification:**
+  - command: `gradle :core:model:test :core:detect:test :core:actions:test --configure-on-demand` · exit_code: 0 · summary: JVM regression green on Kotlin 2.4.10 · timestamp: 2026-08-10T16:47Z
+  - command: `gradle :core:images:test --configure-on-demand` (multiple runs as units landed) · exit_code: 0 · summary: 40+ new test methods green locally · timestamp: 2026-08-10T17:00–18:00Z
+  - command: GitHub Actions CI run 31415157712 (`https://github.com/jackofall1232/tactos/actions/runs/31415157712`) — assembleDebug + test (-x testReleaseUnitTest) + :app:lintDebug · conclusion: success · summary: full pipeline green on final head incl. new Robolectric suites (ImageProcessor, ExifStripper, restore-bypasses-dedup) and APK + room-schemas artifacts · timestamp: 2026-08-10T17:45Z
+- **Response drafted/sent:** PR reply r3751813946 (declined suggestion + fix summary);
+  no other review replies (fixes speak via commits); owner updates in-chat.
+- **Event status:** Review events completed; PR #4 open awaiting maintainer review/merge.
+- **Failures:** Two toolchain-bump CI failures and one stale-test failure, each fixed
+  in-iteration (see reviewer reference); one transient Maven Central 403 rerun. Artifact
+  blob store unreachable from sandbox — schema recovered via CI log print instead.
+- **Decisions:** Recorded in memory.md 2026-08-10 entries (SAF-only, no-Coil, Apache-port
+  policy, AGP 8.x hold, icons pin, 24MP budget implicitly via code).
+- **Confidence:** High — CI-green final head; all sandbox-provable checks run; device-only
+  behavior explicitly deferred to docs/device-verification.md §1–9 (maintainer hardware).
+- **Next action:** Maintainer: run device checklist (API 26 + 34+), decide disclosure
+  wording (docs/disclosure-review.md), review/merge PR #4. Accessibility spike unchanged.
+- **Do-not-retry notes:** Do not bump androidx.core past 1.17.x while on AGP 8.x /
+  compileSdk 36; do not expect material-icons from the 2026+ Compose BOM; artifact blob
+  store (*.blob.core.windows.net) is egress-blocked here — use the CI log print.
+- **Lock:** `lock-20260810T*Z-claude-completion-plan` acquired at run start, released at
+  this closeout.
