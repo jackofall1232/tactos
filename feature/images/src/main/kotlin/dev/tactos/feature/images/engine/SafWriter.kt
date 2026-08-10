@@ -13,6 +13,11 @@ import android.provider.DocumentsContract
  */
 object SafWriter {
 
+    /** Best-effort delete of a document we created; false if the provider refuses. */
+    fun delete(context: Context, uri: Uri): Boolean =
+        runCatching { DocumentsContract.deleteDocument(context.contentResolver, uri) }
+            .getOrDefault(false)
+
     /** Overwrite the (freshly created) document at [uri]. */
     fun write(context: Context, uri: Uri, bytes: ByteArray): Boolean =
         runCatching {

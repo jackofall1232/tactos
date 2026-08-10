@@ -133,6 +133,11 @@ internal fun ToolBody(
             }
             val ok = result != null &&
                 withContext(Dispatchers.IO) { SafWriter.write(context, uri, result.bytes) }
+            if (!ok) {
+                // CreateDocument already made the file — don't leave an
+                // empty/partial document behind (the batch path does the same).
+                withContext(Dispatchers.IO) { SafWriter.delete(context, uri) }
+            }
             progress = null
             announce(
                 when {
@@ -169,8 +174,9 @@ internal fun ToolBody(
                         originalName = ImageLoading.baseName(info).ifEmpty { "image" },
                         index = index,
                         takenAtMillis = null,
-                        width = info?.width,
-                        height = info?.height,
+                        // {w}x{h} describes the saved output, not the source.
+                        width = result?.width ?: info?.width,
+                        height = result?.height ?: info?.height,
                     ),
                 ).ifBlank { "image-${index + 1}" }
                 val written = result != null && withContext(Dispatchers.IO) {
@@ -302,8 +308,17 @@ internal fun ToolBody(
     }
 }
 
-/** One processed image; [fitsTarget] false only for missed byte budgets. */
-internal class ProcessedBytes(val bytes: ByteArray, val fitsTarget: Boolean = true)
+/**
+ * One processed image; [fitsTarget] false only for missed byte budgets.
+ * [width]/[height] are the OUTPUT dimensions (null when unchanged, i.e. the
+ * lossless EXIF path) so rename tokens describe the saved file, not the source.
+ */
+internal class ProcessedBytes(
+    val bytes: ByteArray,
+    val fitsTarget: Boolean = true,
+    val width: Int? = null,
+    val height: Int? = null,
+)
 
 /**
  * Decode -> process for bitmap jobs; lossless strip (with re-encode
@@ -324,12 +339,11 @@ internal fun processOne(
                 try {
                     // Fallback: re-encoding drops all metadata by construction.
                     runCatching {
-                        ProcessedBytes(
-                            ImageProcessor.process(
-                                bitmap,
-                                ImageJob.Convert(sourceFormat, quality = REENCODE_QUALITY),
-                            ).bytes,
+                        val output = ImageProcessor.process(
+                            bitmap,
+                            ImageJob.Convert(sourceFormat, quality = REENCODE_QUALITY),
                         )
+                        ProcessedBytes(output.bytes, width = output.width, height = output.height)
                     }.getOrNull()
                 } finally {
                     bitmap.recycle()
@@ -340,7 +354,7 @@ internal fun processOne(
         try {
             runCatching {
                 val output = ImageProcessor.process(bitmap, job)
-                ProcessedBytes(output.bytes, output.fitsTarget)
+                ProcessedBytes(output.bytes, output.fitsTarget, output.width, output.height)
             }.getOrNull()
         } finally {
             bitmap.recycle()

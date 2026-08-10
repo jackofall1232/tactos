@@ -62,8 +62,11 @@ object ImageLoading {
      */
     fun decode(context: Context, uri: Uri, maxDimension: Int = MAX_DECODE_DIMENSION): Bitmap? {
         val info = info(context, uri) ?: return null
+        // Grow the sample until the *resulting* size is inside the bound —
+        // checking the next halving instead would leave e.g. 8000px at
+        // sample 1 (48 MP decoded) because 8000/2 already fits.
         var sample = 1
-        while (info.width / (sample * 2) >= maxDimension || info.height / (sample * 2) >= maxDimension) {
+        while (info.width / sample > maxDimension || info.height / sample > maxDimension) {
             sample *= 2
         }
         val options = BitmapFactory.Options().apply { inSampleSize = sample }
