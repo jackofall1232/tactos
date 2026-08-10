@@ -1,16 +1,17 @@
 # Version catalog for tactos.
-# Pins are deliberately conservative (known-stable); a CI-verified toolchain
-# bump is queued in .l00prite/todos.md. New entries mean new dependencies —
-# that is a human review gate (see CLAUDE.md section 6).
+# Pins are deliberately conservative (known-stable, bumped 2026-08 to the
+# current stable set, staying on the AGP 8.x line to match the Gradle 8.14
+# wrapper). New entries mean new dependencies — that is a human review gate
+# (see CLAUDE.md section 6).
 
 [versions]
-agp = "8.11.1"
-kotlin = "2.4.0"
-ksp = "2.3.10"
-composeBom = "2024.12.01"
-activityCompose = "1.9.3"
-coreKtx = "1.15.0"
-room = "2.7.1"
+agp = "8.13.2"
+kotlin = "2.4.10"
+ksp = "2.3.11"
+composeBom = "2026.06.01"
+activityCompose = "1.13.0"
+coreKtx = "1.19.0"
+room = "2.8.4"
 coroutines = "1.11.0"
 junit = "4.13.2"
 robolectric = "4.16.1"
@@ -18,8 +19,8 @@ androidxTestCore = "1.6.1"
 # Stack dependencies named in CLAUDE.md section 2 (zxing-core for offline QR,
 # kotlinx-serialization for JSON tooling, DataStore for settings).
 zxing = "3.5.3"
-kotlinxSerializationJson = "1.7.3"
-datastore = "1.1.1"
+kotlinxSerializationJson = "1.11.0"
+datastore = "1.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
