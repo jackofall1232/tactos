@@ -31,3 +31,14 @@ jobs:
         with:
           name: tactos-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      # Room writes the exported schema during compilation (KSP). Publishing it
+      # as an artifact keeps schema drift visible and lets the version-1
+      # baseline be committed from a CI run, since local sandboxes may not be
+      # able to run Android builds.
+      - name: Upload Room schemas
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-schemas
+          path: core/database/schemas/
+          if-no-files-found: error
