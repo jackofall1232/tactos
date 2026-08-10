@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,13 @@ internal fun PickedImageStrip(
                 thumb = withContext(Dispatchers.IO) {
                     ImageLoading.decode(context, uri, maxDimension = THUMB_DIMENSION)
                 }
+            }
+            // Free the thumbnail when replaced or scrolled out of composition.
+            // The value is captured — reading `thumb` inside onDispose would
+            // see (and recycle) the replacement bitmap instead.
+            DisposableEffect(thumb) {
+                val current = thumb
+                onDispose { current?.recycle() }
             }
             val info = infos[uri]
             Column(modifier = Modifier.width(96.dp)) {

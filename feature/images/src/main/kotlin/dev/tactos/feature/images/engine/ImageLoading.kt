@@ -24,19 +24,25 @@ object ImageLoading {
     /** Bounds-only decode plus provider metadata; null when [uri] isn't a decodable image. */
     fun info(context: Context, uri: Uri): Info? {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        context.contentResolver.openInputStream(uri)?.use { stream ->
-            BitmapFactory.decodeStream(stream, null, options)
-        } ?: return null
+        runCatching {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream, null, options)
+            }
+        }.getOrNull() ?: return null
         if (options.outWidth <= 0 || options.outHeight <= 0) return null
 
         var sizeBytes: Long? = null
         var displayName: String? = null
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val sizeIx = cursor.getColumnIndex(OpenableColumns.SIZE)
-                if (sizeIx >= 0 && !cursor.isNull(sizeIx)) sizeBytes = cursor.getLong(sizeIx)
-                val nameIx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (nameIx >= 0) displayName = cursor.getString(nameIx)
+        // Providers can throw (SecurityException on expired grants, provider
+        // bugs) — metadata is best-effort, never a crash.
+        runCatching {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val sizeIx = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    if (sizeIx >= 0 && !cursor.isNull(sizeIx)) sizeBytes = cursor.getLong(sizeIx)
+                    val nameIx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIx >= 0) displayName = cursor.getString(nameIx)
+                }
             }
         }
         return Info(
@@ -59,9 +65,11 @@ object ImageLoading {
             sample *= 2
         }
         val options = BitmapFactory.Options().apply { inSampleSize = sample }
-        return context.contentResolver.openInputStream(uri)?.use { stream ->
-            BitmapFactory.decodeStream(stream, null, options)
-        }
+        return runCatching {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream, null, options)
+            }
+        }.getOrNull()
     }
 
     /** Base name (no extension) for rename patterns; empty when unknown. */

@@ -283,15 +283,23 @@ internal fun processOne(
     is ImageJob.ExifStrip -> {
         ExifStripper(context).strip(source, job)?.bytes
             ?: ImageLoading.decode(context, source)?.let { bitmap ->
-                // Fallback: re-encoding drops all metadata by construction.
-                ImageProcessor.process(
-                    bitmap,
-                    ImageJob.Convert(sourceFormat, quality = REENCODE_QUALITY),
-                ).bytes
+                try {
+                    // Fallback: re-encoding drops all metadata by construction.
+                    ImageProcessor.process(
+                        bitmap,
+                        ImageJob.Convert(sourceFormat, quality = REENCODE_QUALITY),
+                    ).bytes
+                } finally {
+                    bitmap.recycle()
+                }
             }
     }
     else -> ImageLoading.decode(context, source)?.let { bitmap ->
-        ImageProcessor.process(bitmap, job).bytes
+        try {
+            ImageProcessor.process(bitmap, job).bytes
+        } finally {
+            bitmap.recycle()
+        }
     }
 }
 

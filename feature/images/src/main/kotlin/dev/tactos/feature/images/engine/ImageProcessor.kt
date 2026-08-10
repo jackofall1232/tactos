@@ -27,10 +27,14 @@ object ImageProcessor {
             val target = job.spec.resolveTargetSize(source.width, source.height)
             val scaled = scale(source, target.width, target.height)
             val quality = if (job.format.supportsQuality) job.quality else 100
+            val bytes = ImageEncoders.encodeToBytes(scaled, job.format, quality)
+            val (width, height) = scaled.width to scaled.height
+            // Free intermediate pixel memory promptly (batch runs).
+            if (scaled !== source) scaled.recycle()
             Output(
-                bytes = ImageEncoders.encodeToBytes(scaled, job.format, quality),
-                width = scaled.width,
-                height = scaled.height,
+                bytes = bytes,
+                width = width,
+                height = height,
                 quality = quality.takeIf { job.format.supportsQuality },
             )
         }
@@ -77,19 +81,25 @@ object ImageProcessor {
             val canDownscale =
                 max(bitmap.width, bitmap.height) / SCALE_STEP_DIVISOR >= MIN_DIMENSION
             if (result.fits || !canDownscale) {
+                val bytes = ImageEncoders.encodeToBytes(bitmap, job.format, result.quality)
+                val (width, height) = bitmap.width to bitmap.height
+                if (bitmap !== source) bitmap.recycle()
                 return Output(
-                    bytes = ImageEncoders.encodeToBytes(bitmap, job.format, result.quality),
-                    width = bitmap.width,
-                    height = bitmap.height,
+                    bytes = bytes,
+                    width = width,
+                    height = height,
                     quality = result.quality,
                     fitsTarget = result.fits,
                 )
             }
-            bitmap = scale(
+            val scaled = scale(
                 bitmap,
                 max(1, bitmap.width / SCALE_STEP_DIVISOR),
                 max(1, bitmap.height / SCALE_STEP_DIVISOR),
             )
+            // Each loop step abandons the previous intermediate — free it.
+            if (bitmap !== source) bitmap.recycle()
+            bitmap = scaled
         }
     }
 
