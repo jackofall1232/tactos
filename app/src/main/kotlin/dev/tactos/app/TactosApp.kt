@@ -1,8 +1,13 @@
 package dev.tactos.app
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -111,14 +116,19 @@ fun TactosApp(
     }
 
     if (!settings.onboardingComplete) {
-        OnboardingScreen(
-            onFinish = { captureOnFocus ->
-                scope.launch {
-                    settingsRepository.setCaptureOnFocus(captureOnFocus)
-                    settingsRepository.setOnboardingComplete(true)
-                }
-            },
-        )
+        // Onboarding renders outside the Scaffold, so it takes the safe-
+        // drawing insets itself instead of sitting under the system bars.
+        Surface(modifier = Modifier.fillMaxSize()) {
+            OnboardingScreen(
+                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                onFinish = { captureOnFocus ->
+                    scope.launch {
+                        settingsRepository.setCaptureOnFocus(captureOnFocus)
+                        settingsRepository.setOnboardingComplete(true)
+                    }
+                },
+            )
+        }
         return
     }
 
