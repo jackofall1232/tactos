@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:clipboard"))
     implementation(project(":feature:clipboard"))
+    implementation(project(":feature:images"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.datastore.preferences)
