@@ -1,5 +1,7 @@
 package dev.tactos.feature.clipboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,7 +97,7 @@ fun ClipboardScreen(
                 singleLine = true,
             )
 
-            if (typesPresent.size > 1) {
+            AnimatedVisibility(visible = typesPresent.size > 1) {
                 LazyRow(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -117,7 +119,7 @@ fun ClipboardScreen(
                 }
             }
 
-            if (categories.isNotEmpty()) {
+            AnimatedVisibility(visible = categories.isNotEmpty()) {
                 LazyRow(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -134,46 +136,50 @@ fun ClipboardScreen(
                 }
             }
 
-            if (shown.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = if (timeline.isEmpty()) {
-                            "Nothing here yet.\nCopy something, share text to tactos, or tap + to add a clip."
-                        } else {
-                            "No clips match."
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    // Extra bottom padding so the last clip scrolls clear of the FAB.
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        start = 16.dp,
-                        top = 16.dp,
-                        end = 16.dp,
-                        bottom = 96.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(shown, key = { it.id }) { item ->
-                        ClipRow(
-                            item = item,
-                            onClick = { detailId = item.id },
-                            onToggleFavorite = {
-                                scope.launch {
-                                    repository.setFavorite(item.id, !item.favorite)
-                                    refresh++
-                                }
+            Crossfade(targetState = shown.isEmpty(), label = "timeline-empty") { empty ->
+                if (empty) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = if (timeline.isEmpty()) {
+                                "Nothing here yet.\nCopy something, share text to tactos, or tap + to add a clip."
+                            } else {
+                                "No clips match."
                             },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        // Extra bottom padding so the last clip scrolls clear of the FAB.
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = 96.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(shown, key = { it.id }) { item ->
+                            ClipRow(
+                                item = item,
+                                onClick = { detailId = item.id },
+                                onToggleFavorite = {
+                                    scope.launch {
+                                        repository.setFavorite(item.id, !item.favorite)
+                                        refresh++
+                                    }
+                                },
+                                // Animate reorders (pin), inserts (capture), and removals.
+                                modifier = Modifier.animateItem(),
+                            )
+                        }
                     }
                 }
             }
@@ -270,8 +276,9 @@ private fun ClipRow(
     item: ClipItem,
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

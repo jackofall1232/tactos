@@ -38,6 +38,20 @@ class ScreenCodecTest {
     }
 
     @Test
+    fun `transition depth increases along the back hierarchy`() {
+        // Every back target must be shallower than its source, so the
+        // directional screen transition always slides the right way.
+        for (screen in listOf(Screen.Settings, Screen.Disclosure, Screen.Module("clipboard"))) {
+            val target = Screen.backTarget(screen)!!
+            assertEquals(
+                true,
+                Screen.depth(target) < Screen.depth(screen),
+                "depth(${'$'}target) < depth(${'$'}screen)",
+            )
+        }
+    }
+
+    @Test
     fun `back targets mirror the up-arrow hierarchy`() {
         assertNull(Screen.backTarget(Screen.Home))
         assertEquals(Screen.Home, Screen.backTarget(Screen.Settings))

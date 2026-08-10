@@ -1,6 +1,12 @@
 package dev.tactos.app
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -78,6 +84,16 @@ sealed interface Screen {
             Home -> null
             Disclosure -> Settings
             Settings, is Module -> Home
+        }
+
+        /**
+         * Navigation depth, used to pick the screen-transition direction:
+         * deeper targets slide in from the end, shallower from the start.
+         */
+        fun depth(screen: Screen): Int = when (screen) {
+            Home -> 0
+            Settings, is Module -> 1
+            Disclosure -> 2
         }
     }
 }
@@ -180,35 +196,52 @@ fun TactosApp(
         },
     ) { padding ->
         val contentModifier = Modifier.padding(padding)
-        when (val s = screen) {
-            Screen.Home -> HomeScreen(
-                registry = registry,
-                onOpenModule = { screen = Screen.Module(it) },
-                modifier = contentModifier,
-            )
-            Screen.Settings -> SettingsScreen(
-                settings = settings,
-                onSetCaptureOnFocus = { scope.launch { settingsRepository.setCaptureOnFocus(it) } },
-                onSetRetentionDays = { scope.launch { settingsRepository.setRetentionDays(it) } },
-                onSetRetentionMaxItems = {
-                    scope.launch { settingsRepository.setRetentionMaxItems(it) }
-                },
-                onShowDisclosure = { screen = Screen.Disclosure },
-                modifier = contentModifier,
-            )
-            Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
-            is Screen.Module -> when (s.moduleId) {
-                ClipboardToolbox.id -> ClipboardScreen(
-                    repository = clipRepository,
+        AnimatedContent(
+            targetState = screen,
+            transitionSpec = {
+                // Directional: deeper screens slide in from the end,
+                // returning screens from the start; both fade.
+                val forward = Screen.depth(targetState) >= Screen.depth(initialState)
+                val enter = fadeIn() + slideInHorizontally { full ->
+                    if (forward) full / 8 else -full / 8
+                }
+                val exit = fadeOut() + slideOutHorizontally { full ->
+                    if (forward) -full / 8 else full / 8
+                }
+                enter togetherWith exit
+            },
+            label = "screen-transition",
+        ) { s ->
+            when (s) {
+                Screen.Home -> HomeScreen(
+                    registry = registry,
+                    onOpenModule = { screen = Screen.Module(it) },
                     modifier = contentModifier,
-                    afterSave = {
-                        RetentionCleanup.run(clipRepository, settingsRepository.settings.first())
+                )
+                Screen.Settings -> SettingsScreen(
+                    settings = settings,
+                    onSetCaptureOnFocus = { scope.launch { settingsRepository.setCaptureOnFocus(it) } },
+                    onSetRetentionDays = { scope.launch { settingsRepository.setRetentionDays(it) } },
+                    onSetRetentionMaxItems = {
+                        scope.launch { settingsRepository.setRetentionMaxItems(it) }
                     },
-                )
-                else -> ModulePlaceholderScreen(
-                    module = registry.byId(s.moduleId),
+                    onShowDisclosure = { screen = Screen.Disclosure },
                     modifier = contentModifier,
                 )
+                Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
+                is Screen.Module -> when (s.moduleId) {
+                    ClipboardToolbox.id -> ClipboardScreen(
+                        repository = clipRepository,
+                        modifier = contentModifier,
+                        afterSave = {
+                            RetentionCleanup.run(clipRepository, settingsRepository.settings.first())
+                        },
+                    )
+                    else -> ModulePlaceholderScreen(
+                        module = registry.byId(s.moduleId),
+                        modifier = contentModifier,
+                    )
+                }
             }
         }
     }
