@@ -47,6 +47,8 @@ import dev.tactos.app.settings.SettingsRepository
 import dev.tactos.core.database.TactosDb
 import dev.tactos.feature.clipboard.ClipboardScreen
 import dev.tactos.feature.clipboard.ClipboardToolbox
+import dev.tactos.feature.images.ImagesToolbox
+import dev.tactos.feature.images.ui.ImagesScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -235,6 +237,10 @@ fun TactosApp(
                 )
                 Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
                 is Screen.Module -> when (s.moduleId) {
+                    ImagesToolbox.id -> ImagesScreen(
+                        modifier = contentModifier,
+                        snackbarHostState = snackbarHostState,
+                    )
                     ClipboardToolbox.id -> ClipboardScreen(
                         repository = clipRepository,
                         modifier = contentModifier,
