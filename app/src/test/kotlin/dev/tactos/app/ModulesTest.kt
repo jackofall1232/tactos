@@ -3,6 +3,7 @@ package dev.tactos.app
 import dev.tactos.core.model.ClipItem
 import dev.tactos.core.model.ClipType
 import dev.tactos.feature.clipboard.ClipboardToolbox
+import dev.tactos.feature.images.ImagesToolbox
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -30,9 +31,15 @@ class ModulesTest {
     }
 
     @Test
-    fun `registry exposes exactly the clipboard toolbox on the home grid`() {
+    fun `ImagesToolbox is registered under its stable id`() {
         val registry = appModuleRegistry()
-        assertEquals(listOf("clipboard"), registry.modules.map { it.id })
+        assertEquals(ImagesToolbox, registry.byId("images"))
+    }
+
+    @Test
+    fun `registry exposes clipboard then images on the home grid`() {
+        val registry = appModuleRegistry()
+        assertEquals(listOf("clipboard", "images"), registry.modules.map { it.id })
     }
 
     @Test
