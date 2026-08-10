@@ -62,6 +62,31 @@ Durable project facts and decisions that future agents should preserve.
   `core/database`, `core/clipboard`, and `feature/clipboard` tests.
 - `applicationId dev.tactos.app` was ratified by the maintainer on 2026-07-14 (see
   `docs/adr/0003-application-id.md`) — no longer provisional.
+- **Image toolbox decisions (2026-08-10 completion-plan run, see ADR-0004):**
+  (1) All image output goes through SAF (`ACTION_CREATE_DOCUMENT` /
+  `ACTION_OPEN_DOCUMENT_TREE`) — never MediaStore — so the manifest stays
+  zero-permission on every API level (26–28 MediaStore writes would need
+  `WRITE_EXTERNAL_STORAGE`). Originals are never modified. (2) No Coil: a handful of
+  picked images is decoded with downsampled `BitmapFactory`; revisit only if grids grow.
+  (3) `core/images` is pure JVM and zero-dependency like `core/detect` — locally testable
+  in this sandbox. (4) Code adapted from T8RIN/ImageToolbox (Apache-2.0) keeps its Apache
+  header + a NOTICE entry; ports are enumerated in `docs/adr/0004-imagetoolbox-ports.md`;
+  never import its `core/ui`/`core/data`, filters (CeCILL/G'MIC), Firebase, or network
+  code. (5) `androidx.exifinterface` approved with the completion plan (the plan's one
+  new external dependency); AVIF (`avif-coder` native AAR) deliberately deferred.
+- **Toolchain facts (2026-08 bump):** the 2026 Compose BOM no longer carries the
+  upstream-frozen `material-icons-*` artifacts — `material-icons-core` is pinned
+  explicitly (1.7.8). On the AGP 8.x line with compileSdk 36, androidx.core must stay
+  ≤ 1.17.x (1.19.0 requires compileSdk 37 + AGP 9.1). AGP 9 was deliberately not taken
+  (needs Gradle 9.5 wrapper + behavior changes); it is the next queued toolchain step.
+- The GitHub Actions artifact blob store (`*.blob.core.windows.net`) is not reachable
+  from this sandbox even though the Actions API is — CI therefore also prints the Room
+  schema JSON into the build log (`Print Room schemas` step) so the baseline can be
+  reconstructed and committed from logs.
+- `Screen` navigation state is saveable via a string codec
+  (`Screen.encode/decode/backTarget/depth` in `TactosApp.kt`) — system back, the up
+  arrow, and transition direction all derive from the same two pure functions; keep them
+  in sync via `ScreenCodecTest`.
 
 ## Avoid
 - Do not store random temporary notes, speculative ideas, or stale debugging output here.

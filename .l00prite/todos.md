@@ -32,8 +32,20 @@
 - [ ] Disclosure copy final sign-off: `DisclosureScreen.kt` is still marked DRAFT
       in-code by design; a reviewed/refined-wording proposal is at
       `docs/disclosure-review.md` awaiting maintainer approval (human review gate).
-- [ ] Toolchain bump (AGP/Compose BOM/androidx to current stable) — still queued, unchanged
-      from before; bump behind CI verification as usual.
+- [x] Toolchain bump — DONE 2026-08-10 (completion-plan run): AGP 8.13.2, Kotlin 2.4.10,
+      KSP 2.3.11, Compose BOM 2026.06.01 (+ material-icons-core pinned 1.7.8), Room 2.8.4,
+      activity-compose 1.13.0, core-ktx 1.17.0 (1.19 needs AGP 9), serialization 1.11.0,
+      DataStore 1.2.1. CI-verified. Next queued toolchain step: AGP 9.x + Gradle 9.5
+      wrapper + compileSdk 37, its own CI-gated unit.
+- [ ] Device-verification checklist section 9 (completion-plan additions: edge-to-edge,
+      back/rotation/cold-start/undo, image-tool checks) — needs the maintainer's hardware,
+      same session as the section 1–8 pass.
+- [ ] Remaining Phase 4 image scope (pulled-forward part shipped 2026-08-10 — see Done
+      below): crop (consider vendoring ImageToolbox's `lib/cropper`, Apache-2.0, ~7K LOC,
+      no native deps), watermark (visible-only, ~60 lines of Canvas), AVIF
+      (`io.github.awxkee:avif-coder` — native-AAR dependency gate), batch format
+      conversion presets, PDF-from-images via `android.graphics.pdf.PdfDocument` (zero
+      deps), `ClipType.IMAGE` timeline clips (gated core/model contract change).
 
 ## Later
 Phase order for the full vision (one toolbox phase at a time; each is its own
@@ -111,6 +123,24 @@ Architecture principles (binding on v1 design so V2 stays reachable — see `mem
       and explain what's wrong; QR from the clipboard URL.
 
 ## Done
+- 2026-08-10 — Completion-plan run (branch `claude/tactos-completion-plan-q1qtmf`):
+  **v1 polish** — search-detail-beyond-cap bug fixed (`byId` resolution), toolchain bump
+  (see Next), saveable `Screen` state + system `BackHandler` mirroring the up arrow,
+  `enableEdgeToEdge` + inset-aware onboarding + FAB-clearing list padding, themed
+  cold-start placeholder, `AnimatedContent` directional screen transitions +
+  `animateItem` timeline animations + chip/empty-state transitions, delete-undo
+  snackbar (field-preserving restore, Robolectric-tested), Room schema published as CI
+  artifact and printed to the CI log. **Image toolbox (Phase 4 pulled forward, lean):**
+  `core/images` pure-JVM (ImageFormat PNG/JPEG/WEBP, ResizeSpec Fit/Explicit/Percent,
+  TargetSizeSearch, ImageJob sealed specs; EXIF `MetadataTag` + `ExifRemovalPreset`
+  ported from ImageToolbox under Apache-2.0 headers per ADR-0004 + NOTICE; tactos-token
+  rename engine `{name}/{n}/{date}/{w}/{h}/{rand}` + cumulative validator);
+  `feature/images` (ImagesToolbox as second ModuleRegistry consumer, declarative
+  ImageTool descriptors, engine: ImageLoading/ImageEncoders/ImageProcessor/
+  ExifStripper/SafWriter, UI: tool list + photo picker + thumbnail strip + shared
+  ToolBody save flow + Convert/Resize/Compress/ExifStrip screens). Zero manifest
+  changes; one new dependency (androidx.exifinterface, plan-approved). Docs/website
+  truthfulness pass + device-checklist section 9; integration.yml stub deleted.
 - 2026-07-11 — PR #2 (`c5899f7`, merged): closed out the rest of v1 Section 3 in one
   push — `core/clipboard` (ClipboardCapture foreground-refresh + dedup, ShareIngest
   ACTION_SEND wired to the DB, SensitiveClips EXTRA_IS_SENSITIVE filtering at capture

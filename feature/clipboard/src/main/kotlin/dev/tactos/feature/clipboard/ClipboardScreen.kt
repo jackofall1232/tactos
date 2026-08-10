@@ -1,5 +1,7 @@
 package dev.tactos.feature.clipboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +54,8 @@ fun ClipboardScreen(
     modifier: Modifier = Modifier,
     /** Invoked after any save so the host can enforce retention rules. */
     afterSave: suspend () -> Unit = {},
+    /** Host-owned snackbar state; deletes offer Undo through it when present. */
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     val scope = rememberCoroutineScope()
     var query by rememberSaveable { mutableStateOf("") }
@@ -75,7 +82,13 @@ fun ClipboardScreen(
     val shown = base.applyFilter(TimelineFilter(typeFilter, categoryFilter))
     val categories = timeline.distinctCategories()
     val typesPresent = timeline.distinctTypes()
-    val detailItem = detailId?.let { id -> timeline.firstOrNull { it.id == id } }
+    // Resolved from the database, not the limit-capped timeline list, so a
+    // search hit older than the cap still opens; re-keyed on refresh/timeline
+    // so the open sheet reflects pin/favorite/category mutations.
+    var detailItem by remember { mutableStateOf<ClipItem?>(null) }
+    LaunchedEffect(detailId, refresh, timeline) {
+        detailItem = detailId?.let { repository.byId(it) }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -89,7 +102,7 @@ fun ClipboardScreen(
                 singleLine = true,
             )
 
-            if (typesPresent.size > 1) {
+            AnimatedVisibility(visible = typesPresent.size > 1) {
                 LazyRow(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -111,7 +124,7 @@ fun ClipboardScreen(
                 }
             }
 
-            if (categories.isNotEmpty()) {
+            AnimatedVisibility(visible = categories.isNotEmpty()) {
                 LazyRow(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -128,40 +141,50 @@ fun ClipboardScreen(
                 }
             }
 
-            if (shown.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = if (timeline.isEmpty()) {
-                            "Nothing here yet.\nCopy something, share text to tactos, or tap + to add a clip."
-                        } else {
-                            "No clips match."
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(shown, key = { it.id }) { item ->
-                        ClipRow(
-                            item = item,
-                            onClick = { detailId = item.id },
-                            onToggleFavorite = {
-                                scope.launch {
-                                    repository.setFavorite(item.id, !item.favorite)
-                                    refresh++
-                                }
+            Crossfade(targetState = shown.isEmpty(), label = "timeline-empty") { empty ->
+                if (empty) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = if (timeline.isEmpty()) {
+                                "Nothing here yet.\nCopy something, share text to tactos, or tap + to add a clip."
+                            } else {
+                                "No clips match."
                             },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        // Extra bottom padding so the last clip scrolls clear of the FAB.
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = 96.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(shown, key = { it.id }) { item ->
+                            ClipRow(
+                                item = item,
+                                onClick = { detailId = item.id },
+                                onToggleFavorite = {
+                                    scope.launch {
+                                        repository.setFavorite(item.id, !item.favorite)
+                                        refresh++
+                                    }
+                                },
+                                // Animate reorders (pin), inserts (capture), and removals.
+                                modifier = Modifier.animateItem(),
+                            )
+                        }
                     }
                 }
             }
@@ -233,9 +256,23 @@ fun ClipboardScreen(
                 }
             },
             onDelete = {
+                val deleted = item
                 scope.launch {
-                    repository.delete(item.id)
+                    repository.delete(deleted.id)
                     refresh++
+                    // Undo, not confirm: restore the clip with every field
+                    // intact (a fresh row id — the old one is gone). restore()
+                    // bypasses dedup so a surviving same-text row can't
+                    // swallow it.
+                    val result = snackbarHostState?.showSnackbar(
+                        message = "Clip deleted",
+                        actionLabel = "Undo",
+                        duration = SnackbarDuration.Short,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        repository.restore(deleted)
+                        refresh++
+                    }
                 }
                 detailId = null
             },
@@ -258,8 +295,9 @@ private fun ClipRow(
     item: ClipItem,
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

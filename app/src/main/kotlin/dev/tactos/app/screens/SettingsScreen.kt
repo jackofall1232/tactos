@@ -127,7 +127,7 @@ fun SettingsScreen(
                 // no INTERNET permission and never talks to the network.
                 try {
                     context.startActivity(Intent(Intent.ACTION_VIEW, REPO_URL.toUri()))
-                } catch (e: ActivityNotFoundException) {
+                } catch (_: ActivityNotFoundException) {
                     Toast.makeText(context, "No browser available", Toast.LENGTH_SHORT).show()
                 }
             },

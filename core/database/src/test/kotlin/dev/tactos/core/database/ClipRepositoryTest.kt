@@ -232,4 +232,70 @@ class ClipRepositoryTest {
         assertEquals(2, deleted)
         assertEquals(listOf("fav"), repo.timeline().first().map { it.text })
     }
+
+    @Test
+    fun `delete then re-save restores every field (the undo path)`() = runTest {
+        // What the delete-undo snackbar does: save the captured item back
+        // with a fresh id. Dedup only collapses against the newest row, so a
+        // restore is never silently swallowed.
+        val original = item(
+            text = "restore me",
+            type = ClipType.URL,
+            createdAt = 7L,
+            pinned = true,
+            favorite = true,
+            category = "keep",
+            sourceApp = "test",
+        )
+        val id = repo.save(original)
+        repo.save(item("newer", createdAt = 8L))
+        val captured = repo.byId(id)!!
+
+        repo.delete(id)
+        assertNull(repo.byId(id))
+
+        val restoredId = repo.restore(captured)
+        val restored = repo.byId(restoredId)!!
+        assertEquals(captured.text, restored.text)
+        assertEquals(captured.type, restored.type)
+        assertEquals(captured.createdAt, restored.createdAt)
+        assertTrue(restored.pinned)
+        assertTrue(restored.favorite)
+        assertEquals("keep", restored.category)
+        assertEquals("test", restored.sourceApp)
+    }
+
+    @Test
+    fun `restore bypasses dedup when a same-text row survives`() = runTest {
+        // Timeline: dup(old), other, dup(newest, pinned). Deleting the OLD
+        // dup and undoing must re-insert it — save() would dedup into the
+        // newest dup and lose the restore entirely.
+        val oldDupId = repo.save(item("dup", createdAt = 1L, category = "keep"))
+        repo.save(item("other", createdAt = 2L))
+        repo.save(item("dup", createdAt = 3L, pinned = true))
+        val captured = repo.byId(oldDupId)!!
+
+        repo.delete(oldDupId)
+        val restoredId = repo.restore(captured)
+
+        assertTrue(restoredId != oldDupId)
+        val restored = repo.byId(restoredId)!!
+        assertEquals("dup", restored.text)
+        assertEquals("keep", restored.category)
+        assertEquals(1L, restored.createdAt)
+        // Three distinct rows again — nothing merged.
+        assertEquals(3, repo.count())
+    }
+
+    @Test
+    fun `byId resolves rows older than the timeline cap`() = runTest {
+        // The oldest row falls outside a cap-sized timeline window but must
+        // still resolve by id — search results reach the full history.
+        val oldestId = repo.save(item("oldest", createdAt = 1L))
+        repeat(3) { i -> repo.save(item("newer-$i", createdAt = 100L + i)) }
+
+        val windowed = repo.timeline(limit = 3).first()
+        assertTrue(windowed.none { it.id == oldestId })
+        assertEquals("oldest", repo.byId(oldestId)?.text)
+    }
 }

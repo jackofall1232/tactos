@@ -1,11 +1,25 @@
 package dev.tactos.app
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
@@ -18,6 +32,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +47,8 @@ import dev.tactos.app.settings.SettingsRepository
 import dev.tactos.core.database.TactosDb
 import dev.tactos.feature.clipboard.ClipboardScreen
 import dev.tactos.feature.clipboard.ClipboardToolbox
+import dev.tactos.feature.images.ImagesToolbox
+import dev.tactos.feature.images.ui.ImagesScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -44,7 +62,50 @@ sealed interface Screen {
     data object Settings : Screen
     data object Disclosure : Screen
     data class Module(val moduleId: String) : Screen
+
+    companion object {
+        /**
+         * String codec so the current screen survives configuration change
+         * and process death via rememberSaveable. Unknown input decodes to
+         * [Home] — a stale module id must never strand the user.
+         */
+        fun encode(screen: Screen): String = when (screen) {
+            Home -> "home"
+            Settings -> "settings"
+            Disclosure -> "disclosure"
+            is Module -> "module:${screen.moduleId}"
+        }
+
+        fun decode(value: String): Screen = when {
+            value == "settings" -> Settings
+            value == "disclosure" -> Disclosure
+            value.startsWith("module:") -> Module(value.removePrefix("module:"))
+            else -> Home
+        }
+
+        /** The screen the system back gesture returns to, or null to let back exit. */
+        fun backTarget(screen: Screen): Screen? = when (screen) {
+            Home -> null
+            Disclosure -> Settings
+            Settings, is Module -> Home
+        }
+
+        /**
+         * Navigation depth, used to pick the screen-transition direction:
+         * deeper targets slide in from the end, shallower from the start.
+         */
+        fun depth(screen: Screen): Int = when (screen) {
+            Home -> 0
+            Settings, is Module -> 1
+            Disclosure -> 2
+        }
+    }
 }
+
+private val ScreenSaver = Saver<Screen, String>(
+    save = { Screen.encode(it) },
+    restore = { Screen.decode(it) },
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,15 +114,20 @@ fun TactosApp(
     sharedClipTick: Int = 0,
 ) {
     val registry = remember { appModuleRegistry() }
-    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+    var screen by rememberSaveable(stateSaver = ScreenSaver) { mutableStateOf<Screen>(Screen.Home) }
     val appContext = LocalContext.current.applicationContext
     val clipRepository = remember { TactosDb.repository(appContext) }
     val scope = rememberCoroutineScope()
 
     val settingsState by settingsRepository.settings.collectAsState(initial = null)
-    // Hold rendering for the first frames until DataStore emits, so the
-    // onboarding gate doesn't flash for already-onboarded users.
-    val settings = settingsState ?: return
+    // Until DataStore's first emission, paint a themed surface instead of
+    // nothing: no blank frame on cold start, and the onboarding gate still
+    // can't flash for already-onboarded users.
+    val settings = settingsState
+    if (settings == null) {
+        Surface(modifier = Modifier.fillMaxSize()) {}
+        return
+    }
 
     // A share just landed: jump to the timeline (tick 0 = no share yet).
     LaunchedEffect(sharedClipTick) {
@@ -75,18 +141,32 @@ fun TactosApp(
     }
 
     if (!settings.onboardingComplete) {
-        OnboardingScreen(
-            onFinish = { captureOnFocus ->
-                scope.launch {
-                    settingsRepository.setCaptureOnFocus(captureOnFocus)
-                    settingsRepository.setOnboardingComplete(true)
-                }
-            },
-        )
+        // Onboarding renders outside the Scaffold, so it takes the safe-
+        // drawing insets itself instead of sitting under the system bars.
+        Surface(modifier = Modifier.fillMaxSize()) {
+            OnboardingScreen(
+                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                onFinish = { captureOnFocus ->
+                    scope.launch {
+                        settingsRepository.setCaptureOnFocus(captureOnFocus)
+                        settingsRepository.setOnboardingComplete(true)
+                    }
+                },
+            )
+        }
         return
     }
 
+    // System back mirrors the top-bar up arrow (Disclosure -> Settings ->
+    // Home); on Home the default predictive back-to-launcher applies.
+    Screen.backTarget(screen)?.let { target ->
+        BackHandler { screen = target }
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -103,7 +183,7 @@ fun TactosApp(
                 navigationIcon = {
                     if (screen != Screen.Home) {
                         IconButton(onClick = {
-                            screen = if (screen == Screen.Disclosure) Screen.Settings else Screen.Home
+                            Screen.backTarget(screen)?.let { screen = it }
                         }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -123,35 +203,57 @@ fun TactosApp(
         },
     ) { padding ->
         val contentModifier = Modifier.padding(padding)
-        when (val s = screen) {
-            Screen.Home -> HomeScreen(
-                registry = registry,
-                onOpenModule = { screen = Screen.Module(it) },
-                modifier = contentModifier,
-            )
-            Screen.Settings -> SettingsScreen(
-                settings = settings,
-                onSetCaptureOnFocus = { scope.launch { settingsRepository.setCaptureOnFocus(it) } },
-                onSetRetentionDays = { scope.launch { settingsRepository.setRetentionDays(it) } },
-                onSetRetentionMaxItems = {
-                    scope.launch { settingsRepository.setRetentionMaxItems(it) }
-                },
-                onShowDisclosure = { screen = Screen.Disclosure },
-                modifier = contentModifier,
-            )
-            Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
-            is Screen.Module -> when (s.moduleId) {
-                ClipboardToolbox.id -> ClipboardScreen(
-                    repository = clipRepository,
+        AnimatedContent(
+            targetState = screen,
+            transitionSpec = {
+                // Directional: deeper screens slide in from the end,
+                // returning screens from the start; both fade.
+                val forward = Screen.depth(targetState) >= Screen.depth(initialState)
+                val enter = fadeIn() + slideInHorizontally { full ->
+                    if (forward) full / 8 else -full / 8
+                }
+                val exit = fadeOut() + slideOutHorizontally { full ->
+                    if (forward) -full / 8 else full / 8
+                }
+                enter togetherWith exit
+            },
+            label = "screen-transition",
+        ) { s ->
+            when (s) {
+                Screen.Home -> HomeScreen(
+                    registry = registry,
+                    onOpenModule = { screen = Screen.Module(it) },
                     modifier = contentModifier,
-                    afterSave = {
-                        RetentionCleanup.run(clipRepository, settingsRepository.settings.first())
+                )
+                Screen.Settings -> SettingsScreen(
+                    settings = settings,
+                    onSetCaptureOnFocus = { scope.launch { settingsRepository.setCaptureOnFocus(it) } },
+                    onSetRetentionDays = { scope.launch { settingsRepository.setRetentionDays(it) } },
+                    onSetRetentionMaxItems = {
+                        scope.launch { settingsRepository.setRetentionMaxItems(it) }
                     },
-                )
-                else -> ModulePlaceholderScreen(
-                    module = registry.byId(s.moduleId),
+                    onShowDisclosure = { screen = Screen.Disclosure },
                     modifier = contentModifier,
                 )
+                Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
+                is Screen.Module -> when (s.moduleId) {
+                    ImagesToolbox.id -> ImagesScreen(
+                        modifier = contentModifier,
+                        snackbarHostState = snackbarHostState,
+                    )
+                    ClipboardToolbox.id -> ClipboardScreen(
+                        repository = clipRepository,
+                        modifier = contentModifier,
+                        afterSave = {
+                            RetentionCleanup.run(clipRepository, settingsRepository.settings.first())
+                        },
+                        snackbarHostState = snackbarHostState,
+                    )
+                    else -> ModulePlaceholderScreen(
+                        module = registry.byId(s.moduleId),
+                        modifier = contentModifier,
+                    )
+                }
             }
         }
     }

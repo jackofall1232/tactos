@@ -5,6 +5,14 @@ on:
     branches: ["main", "claude/**"]
   pull_request:
 
+# One live run per head repo+branch: a push and its pull_request event share
+# a group (so they don't both run) and a newer push cancels the superseded
+# run — while the head-repo qualifier keeps two forks' identically-named
+# branches (or a fork PR vs a base push) from cancelling each other.
+concurrency:
+  group: ci-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,19 +23,40 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: gradle
 
-      - name: Build debug APK
-        run: ./gradlew --no-daemon assembleDebug
+      # Wrapper + dependency + build-cache persistence across runs.
+      - uses: gradle/actions/setup-gradle@v4
 
-      - name: Unit tests
-        run: ./gradlew --no-daemon test
-
-      - name: Android lint
-        run: ./gradlew --no-daemon :app:lintDebug
+      # Single invocation: one configuration pass for assemble + tests + lint.
+      # Release-variant unit tests are excluded — they duplicate the debug
+      # tests with zero extra signal.
+      - name: Build, test, lint
+        run: ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: tactos-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      # Room writes the exported schema during compilation (KSP). Publishing it
+      # as an artifact keeps schema drift visible and lets the version-1
+      # baseline be committed from a CI run, since local sandboxes may not be
+      # able to run Android builds.
+      - name: Upload Room schemas
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-schemas
+          path: core/database/schemas/
+          if-no-files-found: error
+
+      # Also print the schema JSON to the log (delimited) so environments
+      # that can reach the Actions API but not the artifact blob store can
+      # still reconstruct and commit the schema baseline.
+      - name: Print Room schemas
+        run: |
+          for f in $(find core/database/schemas -name '*.json' | sort); do
+            echo "=== BEGIN SCHEMA $f ==="
+            cat "$f"
+            echo "=== END SCHEMA $f ==="
+          done

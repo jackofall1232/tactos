@@ -1,0 +1,15 @@
+tactos
+Copyright (c) 2026 the tactos maintainer and contributors
+Licensed under the MIT License (see LICENSE).
+
+This product includes software adapted from ImageToolbox
+(https://github.com/T8RIN/ImageToolbox),
+Copyright (c) 2026 T8RIN (Malik Mukhametzyanov),
+licensed under the Apache License, Version 2.0
+(http://www.apache.org/licenses/LICENSE-2.0).
+
+Files adapted from ImageToolbox retain their original Apache-2.0 license
+header and remain governed by the Apache License, Version 2.0. Each such
+file carries an "Adapted from ImageToolbox" notice identifying the upstream
+source path and the changes made. See docs/adr/0004-imagetoolbox-ports.md
+for the full provenance policy and the list of adapted files.

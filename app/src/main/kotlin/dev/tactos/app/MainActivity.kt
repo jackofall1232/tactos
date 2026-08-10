@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.lifecycleScope
 import dev.tactos.app.settings.RetentionCleanup
@@ -29,6 +30,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Draw behind the system bars; every screen takes its own insets
+        // (Scaffold for the shell, safeDrawing for onboarding).
+        enableEdgeToEdge()
         settingsRepository = SettingsRepository(applicationContext)
         val repository = TactosDb.repository(applicationContext)
         capture = ClipboardCapture { item ->

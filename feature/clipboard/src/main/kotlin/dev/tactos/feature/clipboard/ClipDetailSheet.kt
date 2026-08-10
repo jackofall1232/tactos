@@ -85,7 +85,7 @@ fun ClipDetailSheet(
             }
             is ActionEffect.OpenUrl -> try {
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(effect.url)))
-            } catch (e: ActivityNotFoundException) {
+            } catch (_: ActivityNotFoundException) {
                 dialogEffect = ActionEffect.ShowTextResult(
                     title = "Open link",
                     body = "No app on this device can open the link.",
