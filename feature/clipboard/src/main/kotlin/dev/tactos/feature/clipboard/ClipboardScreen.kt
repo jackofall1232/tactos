@@ -20,6 +20,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,6 +54,8 @@ fun ClipboardScreen(
     modifier: Modifier = Modifier,
     /** Invoked after any save so the host can enforce retention rules. */
     afterSave: suspend () -> Unit = {},
+    /** Host-owned snackbar state; deletes offer Undo through it when present. */
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     val scope = rememberCoroutineScope()
     var query by rememberSaveable { mutableStateOf("") }
@@ -251,9 +256,21 @@ fun ClipboardScreen(
                 }
             },
             onDelete = {
+                val deleted = item
                 scope.launch {
-                    repository.delete(item.id)
+                    repository.delete(deleted.id)
                     refresh++
+                    // Undo, not confirm: restore the clip with every field
+                    // intact (a fresh row id — the old one is gone).
+                    val result = snackbarHostState?.showSnackbar(
+                        message = "Clip deleted",
+                        actionLabel = "Undo",
+                        duration = SnackbarDuration.Short,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        repository.save(deleted.copy(id = 0L))
+                        refresh++
+                    }
                 }
                 detailId = null
             },

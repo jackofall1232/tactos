@@ -234,6 +234,38 @@ class ClipRepositoryTest {
     }
 
     @Test
+    fun `delete then re-save restores every field (the undo path)`() = runTest {
+        // What the delete-undo snackbar does: save the captured item back
+        // with a fresh id. Dedup only collapses against the newest row, so a
+        // restore is never silently swallowed.
+        val original = item(
+            text = "restore me",
+            type = ClipType.URL,
+            createdAt = 7L,
+            pinned = true,
+            favorite = true,
+            category = "keep",
+            sourceApp = "test",
+        )
+        val id = repo.save(original)
+        repo.save(item("newer", createdAt = 8L))
+        val captured = repo.byId(id)!!
+
+        repo.delete(id)
+        assertNull(repo.byId(id))
+
+        val restoredId = repo.save(captured.copy(id = 0L))
+        val restored = repo.byId(restoredId)!!
+        assertEquals(captured.text, restored.text)
+        assertEquals(captured.type, restored.type)
+        assertEquals(captured.createdAt, restored.createdAt)
+        assertTrue(restored.pinned)
+        assertTrue(restored.favorite)
+        assertEquals("keep", restored.category)
+        assertEquals("test", restored.sourceApp)
+    }
+
+    @Test
     fun `byId resolves rows older than the timeline cap`() = runTest {
         // The oldest row falls outside a cap-sized timeline window but must
         // still resolve by id — search results reach the full history.
