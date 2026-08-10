@@ -1,5 +1,6 @@
 package dev.tactos.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,7 +47,40 @@ sealed interface Screen {
     data object Settings : Screen
     data object Disclosure : Screen
     data class Module(val moduleId: String) : Screen
+
+    companion object {
+        /**
+         * String codec so the current screen survives configuration change
+         * and process death via rememberSaveable. Unknown input decodes to
+         * [Home] — a stale module id must never strand the user.
+         */
+        fun encode(screen: Screen): String = when (screen) {
+            Home -> "home"
+            Settings -> "settings"
+            Disclosure -> "disclosure"
+            is Module -> "module:${screen.moduleId}"
+        }
+
+        fun decode(value: String): Screen = when {
+            value == "settings" -> Settings
+            value == "disclosure" -> Disclosure
+            value.startsWith("module:") -> Module(value.removePrefix("module:"))
+            else -> Home
+        }
+
+        /** The screen the system back gesture returns to, or null to let back exit. */
+        fun backTarget(screen: Screen): Screen? = when (screen) {
+            Home -> null
+            Disclosure -> Settings
+            Settings, is Module -> Home
+        }
+    }
 }
+
+private val ScreenSaver = Saver<Screen, String>(
+    save = { Screen.encode(it) },
+    restore = { Screen.decode(it) },
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +89,7 @@ fun TactosApp(
     sharedClipTick: Int = 0,
 ) {
     val registry = remember { appModuleRegistry() }
-    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+    var screen by rememberSaveable(stateSaver = ScreenSaver) { mutableStateOf<Screen>(Screen.Home) }
     val appContext = LocalContext.current.applicationContext
     val clipRepository = remember { TactosDb.repository(appContext) }
     val scope = rememberCoroutineScope()
@@ -86,6 +122,12 @@ fun TactosApp(
         return
     }
 
+    // System back mirrors the top-bar up arrow (Disclosure -> Settings ->
+    // Home); on Home the default predictive back-to-launcher applies.
+    Screen.backTarget(screen)?.let { target ->
+        BackHandler { screen = target }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -103,7 +145,7 @@ fun TactosApp(
                 navigationIcon = {
                     if (screen != Screen.Home) {
                         IconButton(onClick = {
-                            screen = if (screen == Screen.Disclosure) Screen.Settings else Screen.Home
+                            Screen.backTarget(screen)?.let { screen = it }
                         }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
