@@ -45,14 +45,18 @@ object ImageProcessor {
             )
         }
 
-        is ImageJob.Compress -> when {
-            job.quality != null -> Output(
-                bytes = ImageEncoders.encodeToBytes(source, job.format, job.quality),
-                width = source.width,
-                height = source.height,
-                quality = job.quality,
-            )
-            else -> compressToTarget(source, job)
+        is ImageJob.Compress -> {
+            val quality = job.quality
+            if (quality != null) {
+                Output(
+                    bytes = ImageEncoders.encodeToBytes(source, job.format, quality),
+                    width = source.width,
+                    height = source.height,
+                    quality = quality,
+                )
+            } else {
+                compressToTarget(source, job)
+            }
         }
 
         is ImageJob.ExifStrip -> error("ExifStrip is stream-level; use ExifStripper")

@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import dev.tactos.core.images.ImageFormat
 import dev.tactos.core.images.ImageJob
 import dev.tactos.core.images.ResizeSpec
