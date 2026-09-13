@@ -61,7 +61,7 @@ sealed interface Screen {
     data object Home : Screen
     data object Settings : Screen
     data object Disclosure : Screen
-    data class Module(val moduleId: String) : Screen
+    data class Module(val moduleId: String, val toolId: String? = null) : Screen
 
     companion object {
         /**
@@ -73,13 +73,15 @@ sealed interface Screen {
             Home -> "home"
             Settings -> "settings"
             Disclosure -> "disclosure"
-            is Module -> "module:${screen.moduleId}"
+            is Module -> "module:${screen.moduleId}" + (screen.toolId?.let { "/$it" } ?: "")
         }
 
         fun decode(value: String): Screen = when {
             value == "settings" -> Settings
             value == "disclosure" -> Disclosure
-            value.startsWith("module:") -> Module(value.removePrefix("module:"))
+            value.startsWith("module:") -> value.removePrefix("module:").let {
+                Module(it.substringBefore('/'), it.substringAfter('/', "").takeIf(String::isNotBlank))
+            }
             else -> Home
         }
 
@@ -223,6 +225,7 @@ fun TactosApp(
                 Screen.Home -> HomeScreen(
                     registry = registry,
                     onOpenModule = { screen = Screen.Module(it) },
+                    onOpenPhotoTool = { screen = Screen.Module(ImagesToolbox.id, it) },
                     modifier = contentModifier,
                 )
                 Screen.Settings -> SettingsScreen(
@@ -238,6 +241,7 @@ fun TactosApp(
                 Screen.Disclosure -> DisclosureScreen(modifier = contentModifier)
                 is Screen.Module -> when (s.moduleId) {
                     ImagesToolbox.id -> ImagesScreen(
+                        initialToolId = s.toolId,
                         modifier = contentModifier,
                         snackbarHostState = snackbarHostState,
                     )

@@ -288,3 +288,15 @@ Append one entry per agent run. Do not overwrite prior runs.
   store (*.blob.core.windows.net) is egress-blocked here — use the CI log print.
 - **Lock:** `lock-20260810T*Z-claude-completion-plan` acquired at run start, released at
   this closeout.
+
+### 2026-09-13T19:42:01.720416+00:00 — Codex phased toolbox expansion
+- User explicitly authorized comprehensive free/BYOK toolbox, photo editing, and commits/merges between phases. This supersedes the old v1-only implementation scope and repeated per-phase approval gates. No keys will be provisioned: BYOK means users configure their own keys on-device.
+- Plan: (1) offline photo studio + metadata inspector + image-to-PDF + discovery; (2) offline developer/text/privacy/everyday suite; (3) opt-in BYOK image edits with secure storage. No accessibility-service implementation without spike evidence.
+- Preflight: 0/25 iterations, no pending events, released lock acquired. Verify pure logic, Android build, unit tests, lint and CI before each merge. Existing stop boundaries and no-progress threshold (3) retained. Primary changes: app/, core/images/, feature/images/, new core/tools and feature/tools, optional AI module, tests and project documentation. User authorizes necessary integration changes, including explicit cloud-network capability for BYOK.
+
+### 2026-09-13T19:50:53.932980+00:00 — Phase 1 review snapshot
+- Photo studio, metadata inspector and images-to-PDF implemented; existing ImageLoading bounds-only decoding defect fixed with regression test.
+- Verification: assembleDebug completed; 258 JUnit/Robolectric tests, 0 failures/errors. Full lint is running; merge awaits verification. First integration attempt caught PdfDocument use/close incompatibility (fixed); a concurrent new test landed after source compilation and required a clean task rerun.
+- Device/emulator interaction has not been run. Source originals preserved; edited exports use explicit SAF destinations.
+
+- 2026-09-13T19:51:38.606925+00:00: final `ANDROID_HOME=/opt/android-sdk GRADLE_USER_HOME=/root/.gradle ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug --console=plain` exit 0 (BUILD SUCCESSFUL). 258 tests, no failures/errors. Shell push lacks configured authentication; connected GitHub app used to publish identical Git tree.

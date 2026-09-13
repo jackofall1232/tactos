@@ -17,9 +17,13 @@ import dev.tactos.core.model.ToolboxModule
 object ImagesToolbox : ToolboxModule {
     override val id: String = "images"
     override val title: String = "Images"
-    override val description: String = "Resize, convert, compress, clean"
+    override val description: String = "Edit photos, create PDFs, and clean metadata"
     override val emoji: String = "🖼️"
     override val order: Int = 10
+
+    const val TOOL_STUDIO = "images.studio"
+    const val TOOL_INSPECT = "images.inspect"
+    const val TOOL_PDF = "images.pdf"
 
     const val TOOL_RESIZE = "images.resize"
     const val TOOL_COMPRESS = "images.compress"
@@ -32,6 +36,9 @@ object ImagesToolbox : ToolboxModule {
      * tool's save step, where SAF actually assigns names.
      */
     val tools: List<ImageTool> = listOf(
+        ImageTool(TOOL_STUDIO, "Photo studio", "Crop, rotate, adjust light and color, filters, watermark", "✨"),
+        ImageTool(TOOL_INSPECT, "Inspect metadata", "See embedded details and verify cleaned copies", "🔍"),
+        ImageTool(TOOL_PDF, "Photos to PDF", "Arrange photos into a document", "📄"),
         ImageTool(
             id = TOOL_RESIZE,
             label = "Resize",

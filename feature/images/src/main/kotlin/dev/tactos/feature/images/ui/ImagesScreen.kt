@@ -45,8 +45,9 @@ import dev.tactos.feature.images.ImagesToolbox
 fun ImagesScreen(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState? = null,
+    initialToolId: String? = null,
 ) {
-    var toolId by rememberSaveable { mutableStateOf<String?>(null) }
+    var toolId by rememberSaveable(initialToolId) { mutableStateOf(initialToolId) }
     // Saved as strings so the selection survives rotation. Picker grants are
     // per-process, so after process death stale uris simply fail to decode
     // and the user re-picks — never a crash.
@@ -73,6 +74,12 @@ fun ImagesScreen(
     ) { current ->
         if (current == null) {
             ToolList(onOpen = { toolId = it })
+        } else if (current.id == ImagesToolbox.TOOL_STUDIO) {
+            PhotoStudioScreen()
+        } else if (current.id == ImagesToolbox.TOOL_INSPECT) {
+            MetadataInspectorScreen()
+        } else if (current.id == ImagesToolbox.TOOL_PDF) {
+            ImagesPdfScreen()
         } else {
             ToolScreen(
                 tool = current,

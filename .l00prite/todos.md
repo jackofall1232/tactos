@@ -1,5 +1,14 @@
 # Prioritized TODOs
 
+## Owner-authorized toolbox expansion (2026-09)
+
+- [x] Phase 1 implementation: local photo editor with preview, crop/rotate/flips, color adjustments, filters, watermark, undo/redo, local enhancement; metadata inspection + selected-field verification; photos to PDF; searchable home. 258 tests, Android build and lint passed locally; PR/CI merge pending.
+- [ ] Phase 2: developer, text, privacy and everyday tools with searchable discovery.
+- [ ] Phase 3: optional BYOK OpenAI photo edits, encrypted on-device key storage and explicit upload consent.
+- [ ] Phase 4: device diagnostics, level, stopwatch and countdown.
+- [ ] Device interaction pass on API 26 and 34+ for all new screens.
+- [ ] Later breadth: full PDF editing/OCR, additional image codecs, drawing/redaction, advanced restoration models, comprehensive metadata families, network diagnostics, plugin SDK and distribution. These are not claimed as implemented.
+
 ## Next
 > **2026-07-14 reconciliation note:** this file, `ledger.md`, `memory.md`, and
 > `state.json` had gone stale — PR #2 (`c5899f7`, merged to `main`) shipped settings

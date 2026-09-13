@@ -18,6 +18,7 @@ class ScreenCodecTest {
             Screen.Disclosure,
             Screen.Module("clipboard"),
             Screen.Module("images"),
+            Screen.Module("images", "images.studio"),
         )
         for (screen in screens) {
             assertEquals(screen, Screen.decode(Screen.encode(screen)), "roundtrip $screen")
