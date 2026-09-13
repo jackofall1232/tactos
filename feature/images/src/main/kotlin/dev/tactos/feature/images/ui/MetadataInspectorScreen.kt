@@ -99,14 +99,18 @@ fun MetadataInspectorScreen(modifier: Modifier = Modifier) {
                             ?: error("This format couldn't be cleaned without changing pixels. No copy was saved.")
                         check(SafWriter.write(context, destination, result.bytes)) { "Couldn't write the cleaned copy." }
                         // Reopen the actual destination, not the in-memory bytes, to verify selected fields.
-                        val remaining = inspectPhotoMetadata(context, destination)
-                        val selected = if (selectedPreset == ExifRemovalPreset.AllMetadata) MetadataTag.entries else selectedPreset.tags
-                        val stillPresent = remaining.keys.filter { it in selected }
-                        if (stillPresent.isEmpty()) {
-                            "Saved and verified: ${result.removedKeys.size} selected fields removed; none of the selected supported fields remain."
-                        } else {
-                            "Saved, but ${stillPresent.size} selected fields remain: ${stillPresent.joinToString { it.key }}."
-                        }
+                        // Some providers allow writing but not reopening a document.
+                        // Keep a successfully saved copy and report verification honestly.
+                        runCatching {
+                            val remaining = inspectPhotoMetadata(context, destination)
+                            val selected = if (selectedPreset == ExifRemovalPreset.AllMetadata) MetadataTag.entries else selectedPreset.tags
+                            val stillPresent = remaining.keys.filter { it in selected }
+                            if (stillPresent.isEmpty()) {
+                                "Saved and verified: ${result.removedKeys.size} selected fields removed; none of the selected supported fields remain."
+                            } else {
+                                "Saved, but ${stillPresent.size} selected fields remain: ${stillPresent.joinToString { it.key }}."
+                            }
+                        }.getOrElse { "Cleaned copy saved, but this provider did not allow verification. Check the saved file before sharing." }
                     }
                     written = true
                     message = report

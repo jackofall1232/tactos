@@ -300,3 +300,6 @@ Append one entry per agent run. Do not overwrite prior runs.
 - Device/emulator interaction has not been run. Source originals preserved; edited exports use explicit SAF destinations.
 
 - 2026-09-13T19:51:38.606925+00:00: final `ANDROID_HOME=/opt/android-sdk GRADLE_USER_HOME=/root/.gradle ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug --console=plain` exit 0 (BUILD SUCCESSFUL). 258 tests, no failures/errors. Shell push lacks configured authentication; connected GitHub app used to publish identical Git tree.
+
+- Photo PR #5 review follow-up: original-URI guard and cancellation-safe export cleanup added; saved metadata-cleaned copies survive provider reinspection failure and report unverified status. Full build/test/lint rerun exit 0 (258 tests).
+- Review suggestions declined after inspection: immediate recycling of displayed Compose bitmaps can race drawing/background renders; bounded 1024px previews become GC-eligible when replaced. PDF keeps documented `wt` truncation mode: ContentResolver documents that `w` may NOT truncate (https://developer.android.com/reference/android/content/ContentResolver). Originals remain untouched and provider failures surface to the user.

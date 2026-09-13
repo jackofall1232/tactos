@@ -81,20 +81,26 @@ fun PhotoStudioScreen(modifier: Modifier = Modifier) {
         val exportPath = pending
         pending = null
         val exportFile = exportPath?.let { java.io.File(context.cacheDir, it) }
-        if (result.resultCode == android.app.Activity.RESULT_OK && uri != null && exportFile != null) {
-            scope.launch {
+        if (result.resultCode == android.app.Activity.RESULT_OK && uri != null) {
+            if (uri.toString() == uriString) {
+                exportFile?.delete()
+                message = "Choose a new file. Your original will not be overwritten."
+            } else scope.launch(start = CoroutineStart.UNDISPATCHED) {
                 busy = true
+                var written = false
                 try {
-                    val ok = withContext(Dispatchers.IO) {
-                        try { SafWriter.write(context, uri, exportFile.readBytes()) } finally { exportFile.delete() }
-                    }
-                    if (!ok) withContext(Dispatchers.IO) { SafWriter.delete(context, uri) }
-                    message = if (ok) "Edited copy saved. Your original is unchanged." else "Could not save. Please choose another location."
+                    check(exportFile != null) { "Export expired" }
+                    written = withContext(Dispatchers.IO) { SafWriter.write(context, uri, exportFile.readBytes()) }
+                    message = if (written) "Edited copy saved. Your original is unchanged." else "Could not save. Please choose another location."
                 } catch (e: CancellationException) { throw e }
-                catch (_: Exception) {
-                    withContext(NonCancellable + Dispatchers.IO) { SafWriter.delete(context, uri); exportFile.delete() }
-                    message = "Export expired. Please save the photo again."
-                } finally { busy = false }
+                catch (_: Exception) { message = "Export expired. Please save the photo again." }
+                finally {
+                    withContext(NonCancellable + Dispatchers.IO) {
+                        if (!written) SafWriter.delete(context, uri)
+                        exportFile?.delete()
+                    }
+                    busy = false
+                }
             }
         } else { exportFile?.delete() }
     }
