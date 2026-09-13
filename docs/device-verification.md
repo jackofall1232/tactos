@@ -286,3 +286,33 @@ deliberately leaves to other processes:
 | 5. Every Section 3 v1 checkbox checked with a pointer to verification evidence | This checklist, once filled in and copied into `.l00prite/ledger.md`, is that evidence for the device-only items; the rest of Section 3 is verified by CI |
 | 6. README documents what actually exists | Not this doc — a docs/README review item |
 | 7. Maintainer has reviewed and merged v1 to `main` | Not this doc — a maintainer sign-off step, happens after all of the above |
+
+## 10. Photo studio expansion (2026-09)
+
+Run on API 26 and 34+: pick a camera JPEG with rotated EXIF, a transparent PNG, a
+large image, and an unavailable/revoked URI. Verify previews and exports match;
+exercise aspect crop/position after rotation, both flips, adjustments, each look,
+watermark, compare, undo/redo, and reset. Confirm JPEG transparency is white.
+Rotate while the destination picker is open, then finish saving. Cancel the picker.
+Verify originals stay byte-for-byte unchanged and errors leave no partial output.
+
+Inspect a GPS-tagged photo, remove location, reopen the saved destination and verify
+selected fields are absent. Confirm the UI never promises that all metadata is gone.
+Build a three-page PDF, reorder/remove photos, check portrait/landscape page bounds,
+open the resulting PDF elsewhere, and cancel during export.
+
+Status: device evidence pending; unit tests and build evidence are recorded separately.
+
+Photo PR #5 follow-up checks:
+- Open a photo tool directly from Home: system Back and the top arrow both return Home.
+  Open it from the Images list: system Back returns to that list.
+- On a small-heap device, export a large square image in each format; confirm the
+  reduced resolution is usable and memory failure displays an error without crashing.
+- Crop positions refer to source coordinates before rotation/flips; compare export.
+- Repeated photo picks must not accumulate persistent URI grants. After process death,
+  an expired grant may require picking the photo again.
+- Exercise failed/canceled exports with multiple document providers, including an
+  existing-name selection; verify original and unrelated files remain intact.
+
+Tools, AI and device drafts are not part of this APK; add their interaction checklists
+when those modules are integrated.

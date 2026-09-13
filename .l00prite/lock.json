@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "lock_id": "lock-20260810T164409Z-claude-completion-plan",
+  "lock_id": "codex-reconnect-docs-20260913",
   "owner_agent": null,
   "owner_session": null,
-  "acquired_at": "2026-08-10T16:44:09Z",
-  "expires_at": "2026-08-10T20:44:09Z",
-  "ttl_seconds": 14400,
+  "acquired_at": "2026-09-13T20:48:36.644562+00:00",
+  "expires_at": "2026-09-13T21:48:36.644562+00:00",
+  "ttl_seconds": 3600,
   "purpose": null,
   "protected_paths": [
     "ledger.md",

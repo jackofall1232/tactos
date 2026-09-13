@@ -5,6 +5,25 @@ clipboard — no ads, no accounts, no network, no nonsense.
 
 [![CI](https://github.com/jackofall1232/tactos/actions/workflows/ci.yml/badge.svg)](https://github.com/jackofall1232/tactos/actions/workflows/ci.yml)
 
+## Photo studio
+
+Open **Photo studio** from the home screen to crop with aspect presets and position
+controls, rotate, flip, adjust brightness/contrast/saturation/warmth, apply grayscale,
+sepia or vivid looks, and add a text watermark. Compare with the original, undo/redo,
+and export a new JPEG, PNG or WebP. Preview and export share the same rendering engine;
+large images are decoded to at most 4096 pixels on their longest side, with a lower
+limit based on the device heap to allow simultaneous export buffers. Crop position
+controls refer to the original photo before rotation and flips.
+
+**Inspect metadata** displays supported EXIF fields and saves a cleaned copy with
+selected-field verification against the actual destination. This is not a guarantee
+that every metadata family or identifying visual detail has been removed.
+**Photos to PDF** arranges up to 12 selected photos into A4 portrait or landscape pages,
+with reorder/remove controls. All these operations run locally and preserve originals.
+
+The home screen searches installed toolbox names and photo-tool descriptions.
+
+
 ## Why
 
 Every small task on Android seems to demand its own throwaway app — a QR generator here, a

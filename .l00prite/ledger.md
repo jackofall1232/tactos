@@ -288,3 +288,32 @@ Append one entry per agent run. Do not overwrite prior runs.
   store (*.blob.core.windows.net) is egress-blocked here — use the CI log print.
 - **Lock:** `lock-20260810T*Z-claude-completion-plan` acquired at run start, released at
   this closeout.
+
+### 2026-09-13T19:42:01.720416+00:00 — Codex phased toolbox expansion
+- User explicitly authorized comprehensive free/BYOK toolbox, photo editing, and commits/merges between phases. This supersedes the old v1-only implementation scope and repeated per-phase approval gates. No keys will be provisioned: BYOK means users configure their own keys on-device.
+- Plan: (1) offline photo studio + metadata inspector + image-to-PDF + discovery; (2) offline developer/text/privacy/everyday suite; (3) opt-in BYOK image edits with secure storage. No accessibility-service implementation without spike evidence.
+- Preflight: 0/25 iterations, no pending events, released lock acquired. Verify pure logic, Android build, unit tests, lint and CI before each merge. Existing stop boundaries and no-progress threshold (3) retained. Primary changes: app/, core/images/, feature/images/, new core/tools and feature/tools, optional AI module, tests and project documentation. User authorizes necessary integration changes, including explicit cloud-network capability for BYOK.
+
+### 2026-09-13T19:50:53.932980+00:00 — Phase 1 review snapshot
+- Photo studio, metadata inspector and images-to-PDF implemented; existing ImageLoading bounds-only decoding defect fixed with regression test.
+- Verification: assembleDebug completed; 258 JUnit/Robolectric tests, 0 failures/errors. Full lint is running; merge awaits verification. First integration attempt caught PdfDocument use/close incompatibility (fixed); a concurrent new test landed after source compilation and required a clean task rerun.
+- Device/emulator interaction has not been run. Source originals preserved; edited exports use explicit SAF destinations.
+
+- 2026-09-13T19:51:38.606925+00:00: final `ANDROID_HOME=/opt/android-sdk GRADLE_USER_HOME=/root/.gradle ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug --console=plain` exit 0 (BUILD SUCCESSFUL). 258 tests, no failures/errors. Shell push lacks configured authentication; connected GitHub app used to publish identical Git tree.
+
+- Photo PR #5 review follow-up: original-URI guard and cancellation-safe export cleanup added; saved metadata-cleaned copies survive provider reinspection failure and report unverified status. Full build/test/lint rerun exit 0 (258 tests).
+- Review suggestions declined after inspection: immediate recycling of displayed Compose bitmaps can race drawing/background renders; bounded 1024px previews become GC-eligible when replaced. PDF keeps documented `wt` truncation mode: ContentResolver documents that `w` may NOT truncate (https://developer.android.com/reference/android/content/ContentResolver). Originals remain untouched and provider failures surface to the user.
+
+### 2026-09-13T20:31:04.892886+00:00 — Recovery reconciliation and photo PR #5 closeout
+- User requested: update l00prite todos/docs and merge. Scope: existing photo PR and its recovered review fixes; preserve untracked later-phase drafts.
+- Remote PR head 9bda4a83fae8ff8f4602988a0adc34f8498ef78b has the same tree as local HEAD 5168411; verified after fetching the explicit branch.
+- Included recovered export memory budget and regression tests, direct-shortcut Back routing, transient photo access and explicit source-coordinate crop labels. Updated README, device checklist, todos, state, heartbeat, memory and failure notes.
+- Verification: `ANDROID_HOME=/opt/android-sdk GRADLE_USER_HOME=/root/.gradle ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug --console=plain` exit 0, BUILD SUCCESSFUL, 260 tests / 0 failures / 0 errors in integrated-module reports; log `/tmp/tactos-reconnect-verify.log`. Gradle reused unchanged task outputs.
+- No device/emulator interaction or live AI request performed. Provider-specific cancellation/cleanup remains on the device checklist. Existing source-URI guards and cancellation handling retained.
+- Local tools/AI/device drafts are not registered in settings or app and are not included in this photo commit. Temporary wiring scripts must not be blindly replayed.
+- Initial restricted build/fetch failed on cache permissions/DNS; approved elevated commands succeeded. No code/test failures observed.
+- Next: publish this verified tree, check CI and merge PR #5. Full app Definition of Done remains open. Lock codex-reconnect-docs-20260913 released for publication.
+
+- 2026-09-13T20:32:20.497851+00:00: local commit 903bd09 created; GitHub create_tree rejected twice by automatic approval review. Connected account login matches repository owner and has admin/push access, but reviewer requires explicit approval to upload this payload to jackofall1232/tactos. Nothing published or merged. User approval is the next action; lock released.
+
+- 2026-09-13T20:48:36.644562+00:00: User answered "merge" to the explicit payload/destination approval question. Publication block cleared; proceed with the photo fixes/docs tree to jackofall1232/tactos PR #5, verify CI, and merge. GitHub PR status is authoritative for the resulting merge. Lock released for publication.

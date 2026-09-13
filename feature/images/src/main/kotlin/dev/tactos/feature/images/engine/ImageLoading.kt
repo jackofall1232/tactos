@@ -29,6 +29,7 @@ object ImageLoading {
         runCatching {
             context.contentResolver.openInputStream(uri)?.use { stream ->
                 BitmapFactory.decodeStream(stream, null, options)
+                true // Bounds-only decode intentionally returns no Bitmap.
             }
         }.getOrNull() ?: return null
         if (options.outWidth <= 0 || options.outHeight <= 0) return null

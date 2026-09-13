@@ -90,3 +90,12 @@ Durable project facts and decisions that future agents should preserve.
 
 ## Avoid
 - Do not store random temporary notes, speculative ideas, or stale debugging output here.
+
+## 2026-09-13 recovery reconciliation
+- Photo PR #5 is the integrated phase. Local `core/tools`, `feature/tools`,
+  `feature/ai`, and `feature/device` directories are untracked drafts, absent from
+  `settings.gradle.kts` and app wiring. Preserve them; do not describe them as shipped.
+- Temporary wiring scripts are recovery clues, not an authoritative or idempotent
+  integration procedure. Inspect and integrate deliberately in later phases.
+- Photo exports use a heap-dependent decode budget (maximum 4096px); crop positioning
+  uses source coordinates. Photo picker access is transient, with re-pick on expiry.
