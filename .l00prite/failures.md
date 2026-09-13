@@ -20,7 +20,10 @@ Record failed approaches and why they should not be retried unless conditions ch
 | Stale Arming (crashed run left `enabled: true`) | S2 | Pre-flight stale-run recovery; persisted flags never authorize a run. |
 
 ## Failed Approaches
-- None yet.
+- 2026-09-13 recovery: persisted progress stopped at photo phase while untracked later-phase drafts remained locally. Directory existence and temporary build logs do not prove app integration; check settings, app registration, Git tracking and a fresh build.
+- Restricted execution cannot write Gradle cache locks or resolve GitHub; approved elevated execution restores build/fetch access. Git publishing may require the connected GitHub app because shell authentication is unavailable.
 
-## Blockers
-- None yet.
+## Resolved publication approval
+- 2026-09-13: GitHub tree publication rejected by automatic approval review, including after ownership verification. Requires explicit user approval of the photo fixes/documentation payload and destination `jackofall1232/tactos`; do not work around the denial.
+
+- User explicitly reconfirmed upload and merge after the destination/payload approval question. Publication may resume.

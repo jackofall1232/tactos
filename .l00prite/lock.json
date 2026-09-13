@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "lock_id": "codex-toolbox-20260913",
+  "lock_id": "codex-reconnect-docs-20260913",
   "owner_agent": null,
   "owner_session": null,
-  "acquired_at": "2026-09-13T19:42:01.720416+00:00",
-  "expires_at": "2026-09-13T23:42:01.720416+00:00",
-  "ttl_seconds": 14400,
+  "acquired_at": "2026-09-13T20:48:36.644562+00:00",
+  "expires_at": "2026-09-13T21:48:36.644562+00:00",
+  "ttl_seconds": 3600,
   "purpose": null,
   "protected_paths": [
     "ledger.md",

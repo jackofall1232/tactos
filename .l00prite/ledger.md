@@ -303,3 +303,17 @@ Append one entry per agent run. Do not overwrite prior runs.
 
 - Photo PR #5 review follow-up: original-URI guard and cancellation-safe export cleanup added; saved metadata-cleaned copies survive provider reinspection failure and report unverified status. Full build/test/lint rerun exit 0 (258 tests).
 - Review suggestions declined after inspection: immediate recycling of displayed Compose bitmaps can race drawing/background renders; bounded 1024px previews become GC-eligible when replaced. PDF keeps documented `wt` truncation mode: ContentResolver documents that `w` may NOT truncate (https://developer.android.com/reference/android/content/ContentResolver). Originals remain untouched and provider failures surface to the user.
+
+### 2026-09-13T20:31:04.892886+00:00 — Recovery reconciliation and photo PR #5 closeout
+- User requested: update l00prite todos/docs and merge. Scope: existing photo PR and its recovered review fixes; preserve untracked later-phase drafts.
+- Remote PR head 9bda4a83fae8ff8f4602988a0adc34f8498ef78b has the same tree as local HEAD 5168411; verified after fetching the explicit branch.
+- Included recovered export memory budget and regression tests, direct-shortcut Back routing, transient photo access and explicit source-coordinate crop labels. Updated README, device checklist, todos, state, heartbeat, memory and failure notes.
+- Verification: `ANDROID_HOME=/opt/android-sdk GRADLE_USER_HOME=/root/.gradle ./gradlew assembleDebug test -x testReleaseUnitTest :app:lintDebug --console=plain` exit 0, BUILD SUCCESSFUL, 260 tests / 0 failures / 0 errors in integrated-module reports; log `/tmp/tactos-reconnect-verify.log`. Gradle reused unchanged task outputs.
+- No device/emulator interaction or live AI request performed. Provider-specific cancellation/cleanup remains on the device checklist. Existing source-URI guards and cancellation handling retained.
+- Local tools/AI/device drafts are not registered in settings or app and are not included in this photo commit. Temporary wiring scripts must not be blindly replayed.
+- Initial restricted build/fetch failed on cache permissions/DNS; approved elevated commands succeeded. No code/test failures observed.
+- Next: publish this verified tree, check CI and merge PR #5. Full app Definition of Done remains open. Lock codex-reconnect-docs-20260913 released for publication.
+
+- 2026-09-13T20:32:20.497851+00:00: local commit 903bd09 created; GitHub create_tree rejected twice by automatic approval review. Connected account login matches repository owner and has admin/push access, but reviewer requires explicit approval to upload this payload to jackofall1232/tactos. Nothing published or merged. User approval is the next action; lock released.
+
+- 2026-09-13T20:48:36.644562+00:00: User answered "merge" to the explicit payload/destination approval question. Publication block cleared; proceed with the photo fixes/docs tree to jackofall1232/tactos PR #5, verify CI, and merge. GitHub PR status is authoritative for the resulting merge. Lock released for publication.

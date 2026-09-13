@@ -11,7 +11,9 @@ Open **Photo studio** from the home screen to crop with aspect presets and posit
 controls, rotate, flip, adjust brightness/contrast/saturation/warmth, apply grayscale,
 sepia or vivid looks, and add a text watermark. Compare with the original, undo/redo,
 and export a new JPEG, PNG or WebP. Preview and export share the same rendering engine;
-large images are decoded to at most 4096 pixels on their longest side.
+large images are decoded to at most 4096 pixels on their longest side, with a lower
+limit based on the device heap to allow simultaneous export buffers. Crop position
+controls refer to the original photo before rotation and flips.
 
 **Inspect metadata** displays supported EXIF fields and saves a cleaned copy with
 selected-field verification against the actual destination. This is not a guarantee

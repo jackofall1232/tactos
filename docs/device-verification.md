@@ -302,3 +302,17 @@ Build a three-page PDF, reorder/remove photos, check portrait/landscape page bou
 open the resulting PDF elsewhere, and cancel during export.
 
 Status: device evidence pending; unit tests and build evidence are recorded separately.
+
+Photo PR #5 follow-up checks:
+- Open a photo tool directly from Home: system Back and the top arrow both return Home.
+  Open it from the Images list: system Back returns to that list.
+- On a small-heap device, export a large square image in each format; confirm the
+  reduced resolution is usable and memory failure displays an error without crashing.
+- Crop positions refer to source coordinates before rotation/flips; compare export.
+- Repeated photo picks must not accumulate persistent URI grants. After process death,
+  an expired grant may require picking the photo again.
+- Exercise failed/canceled exports with multiple document providers, including an
+  existing-name selection; verify original and unrelated files remain intact.
+
+Tools, AI and device drafts are not part of this APK; add their interaction checklists
+when those modules are integrated.

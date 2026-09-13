@@ -72,7 +72,6 @@ fun PhotoStudioScreen(modifier: Modifier = Modifier) {
     }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             uriString = uri.toString(); edit = PhotoEditSpec(); undo.clear(); redo.clear(); message = null
         }
     }
@@ -175,10 +174,11 @@ fun PhotoStudioScreen(modifier: Modifier = Modifier) {
                     }
                     val crop = edit.crop
                     val w = crop.right - crop.left; val h = crop.bottom - crop.top
-                    if (w < .999f) StudioSlider("Horizontal position", crop.left / (1-w), 0f..1f, !busy, ::beginSlider, ::finishSlider) {
+                    if (w < .999f || h < .999f) Text("Crop position follows the original photo, before rotation and flips.", style = MaterialTheme.typography.bodySmall)
+                    if (w < .999f) StudioSlider("Source horizontal position", crop.left / (1-w), 0f..1f, !busy, ::beginSlider, ::finishSlider) {
                         val left = it*(1-w); edit = edit.copy(crop = crop.copy(left = left, right = left+w))
                     }
-                    if (h < .999f) StudioSlider("Vertical position", crop.top / (1-h), 0f..1f, !busy, ::beginSlider, ::finishSlider) {
+                    if (h < .999f) StudioSlider("Source vertical position", crop.top / (1-h), 0f..1f, !busy, ::beginSlider, ::finishSlider) {
                         val top = it*(1-h); edit = edit.copy(crop = crop.copy(top = top, bottom = top+h))
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -199,7 +199,7 @@ fun PhotoStudioScreen(modifier: Modifier = Modifier) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ImageFormat.entries.forEach { type -> FilterChip(enabled = !busy, selected = format == type.name, onClick = { format = type.name }, label = { Text(type.name) }) }
             }
-            Text("Export processes photos up to 4096 px on the long side. Original EXIF fields are not copied. JPEG uses a white background for transparency.", style = MaterialTheme.typography.bodySmall)
+            Text("Export processes photos up to 4096 px on the long side, with a lower limit on devices with less memory. Original EXIF fields are not copied. JPEG uses a white background for transparency.", style = MaterialTheme.typography.bodySmall)
             Button(modifier = Modifier.fillMaxWidth(), enabled = !busy && pending == null, onClick = {
                 val selected = uriString ?: return@Button
                 val snapshot = edit
@@ -208,7 +208,8 @@ fun PhotoStudioScreen(modifier: Modifier = Modifier) {
                     busy = true; message = null
                     try {
                         val bytes = withContext(Dispatchers.IO) {
-                            val original = ImageLoading.decode(context, Uri.parse(selected)) ?: error("Photo is no longer available")
+                            val maxDimension = PhotoExportBudget.maxDimension(Runtime.getRuntime().maxMemory())
+                            val original = ImageLoading.decode(context, Uri.parse(selected), maxDimension) ?: error("Photo is no longer available")
                             try {
                                 val rendered = PhotoEditor.render(original, snapshot)
                                 try { ImageEncoders.encodeToBytes(rendered, outputFormat, 95) } finally { rendered.recycle() }
@@ -222,6 +223,7 @@ fun PhotoStudioScreen(modifier: Modifier = Modifier) {
                             putExtra(Intent.EXTRA_TITLE, "tactos-edit.${outputFormat.extension}")
                         })
                     } catch (e: CancellationException) { throw e }
+                    catch (_: OutOfMemoryError) { pending = null; message = "There is not enough memory to export this photo. Close other tools or choose a smaller image and try again." }
                     catch (_: Exception) { pending = null; message = "Could not export this photo. Try a smaller image or choose it again." }
                     finally { busy = false }
                 }

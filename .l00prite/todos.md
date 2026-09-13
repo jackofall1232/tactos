@@ -2,10 +2,10 @@
 
 ## Owner-authorized toolbox expansion (2026-09)
 
-- [x] Phase 1 implementation: local photo editor with preview, crop/rotate/flips, color adjustments, filters, watermark, undo/redo, local enhancement; metadata inspection + selected-field verification; photos to PDF; searchable home. 258 tests, Android build and lint passed locally; PR/CI merge pending.
-- [ ] Phase 2: developer, text, privacy and everyday tools with searchable discovery.
-- [ ] Phase 3: optional BYOK OpenAI photo edits, encrypted on-device key storage and explicit upload consent.
-- [ ] Phase 4: device diagnostics, level, stopwatch and countdown.
+- [x] Phase 1 implementation: local photo editor with preview, crop/rotate/flips, color adjustments, filters, watermark, undo/redo, local enhancement; metadata inspection + selected-field verification; photos to PDF; searchable home. Implementation and review fixes ready in PR #5; fresh build/test/lint verification and merge tracked in ledger.md.
+- [ ] Phase 2: integrate and verify developer, text, privacy and everyday tools. Local drafts exist in `core/tools/` and `feature/tools/`, but are untracked and absent from settings/app wiring; not shipped.
+- [ ] Phase 3: integrate and verify optional BYOK OpenAI photo edits. Local `feature/ai/` draft exists; app registration, permission/backup integration, security review and end-to-end verification remain pending. Not shipped.
+- [ ] Phase 4: integrate and verify device diagnostics, level, stopwatch and countdown. Local `feature/device/` draft exists but is not registered or shipped.
 - [ ] Device interaction pass on API 26 and 34+ for all new screens.
 - [ ] Later breadth: full PDF editing/OCR, additional image codecs, drawing/redaction, advanced restoration models, comprehensive metadata families, network diagnostics, plugin SDK and distribution. These are not claimed as implemented.
 
@@ -49,12 +49,8 @@
 - [ ] Device-verification checklist section 9 (completion-plan additions: edge-to-edge,
       back/rotation/cold-start/undo, image-tool checks) — needs the maintainer's hardware,
       same session as the section 1–8 pass.
-- [ ] Remaining Phase 4 image scope (pulled-forward part shipped 2026-08-10 — see Done
-      below): crop (consider vendoring ImageToolbox's `lib/cropper`, Apache-2.0, ~7K LOC,
-      no native deps), watermark (visible-only, ~60 lines of Canvas), AVIF
-      (`io.github.awxkee:avif-coder` — native-AAR dependency gate), batch format
-      conversion presets, PDF-from-images via `android.graphics.pdf.PdfDocument` (zero
-      deps), `ClipType.IMAGE` timeline clips (gated core/model contract change).
+- [x] Photo expansion implementation: crop, visible text watermark and PDF-from-images (PR #5).
+- [ ] Remaining image scope: AVIF (native dependency review), batch conversion presets, and `ClipType.IMAGE` timeline clips (core/model contract review).
 
 ## Later
 Phase order for the full vision (one toolbox phase at a time; each is its own

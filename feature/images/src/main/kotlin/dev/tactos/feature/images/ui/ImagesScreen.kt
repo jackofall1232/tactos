@@ -48,6 +48,7 @@ fun ImagesScreen(
     initialToolId: String? = null,
 ) {
     var toolId by rememberSaveable(initialToolId) { mutableStateOf(initialToolId) }
+    var enteredFromList by rememberSaveable(initialToolId) { mutableStateOf(initialToolId == null) }
     // Saved as strings so the selection survives rotation. Picker grants are
     // per-process, so after process death stale uris simply fail to decode
     // and the user re-picks — never a crash.
@@ -59,7 +60,7 @@ fun ImagesScreen(
     ) { uris -> if (uris.isNotEmpty()) pickedStrings = uris.map(Uri::toString) }
 
     val tool = toolId?.let { ImagesToolbox.toolById(it) }
-    BackHandler(enabled = tool != null) { toolId = null }
+    BackHandler(enabled = tool != null && enteredFromList) { toolId = null }
 
     AnimatedContent(
         targetState = tool,
@@ -73,7 +74,7 @@ fun ImagesScreen(
         modifier = modifier,
     ) { current ->
         if (current == null) {
-            ToolList(onOpen = { toolId = it })
+            ToolList(onOpen = { enteredFromList = true; toolId = it })
         } else if (current.id == ImagesToolbox.TOOL_STUDIO) {
             PhotoStudioScreen()
         } else if (current.id == ImagesToolbox.TOOL_INSPECT) {
